@@ -32,8 +32,10 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # PAT with contents:write on the rnwolfe/homebrew-tap repo.
-          GORELEASER_TOKEN: ${{ secrets.GORELEASER_TOKEN }}
+          # PAT with contents:write on the rnwolfe/homebrew-tap repo. Until it (and the
+          # tap repo) exist, the Homebrew cask publish is skipped automatically.
+          GORELEASER_TOKEN: ${{ secrets.GORELEASER_TOKEN || secrets.GITHUB_TOKEN }}
+          HOMEBREW_SKIP: ${{ secrets.GORELEASER_TOKEN == '' && 'true' || 'false' }}
 
       - name: Attest build provenance
         if: ${{ !github.event.repository.private }}

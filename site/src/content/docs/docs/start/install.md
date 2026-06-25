@@ -31,7 +31,7 @@ put `vabc` on your `PATH`.
 ## Install script
 
 ```bash
-curl -fsSL https://vabc.sh/install.sh | sh
+curl -fsSL https://vabc-cli.vercel.app/install.sh | sh
 ```
 
 The script detects your OS/arch, downloads the matching release archive **and** `checksums.txt`,

@@ -16,6 +16,8 @@ an embedded usage contract. No login, no API key.
 
 <img src="./demo/vabc.gif" alt="vabc demo" width="720">
 
+**[Documentation →](https://vabc-cli.vercel.app)**
+
 </div>
 
 ## Why

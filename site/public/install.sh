@@ -1,7 +1,7 @@
 #!/bin/sh
 # vabc installer — downloads a release archive, verifies its SHA-256, installs the binary.
 #
-#   curl -fsSL https://vabc.sh/install.sh | sh
+#   curl -fsSL https://vabc-cli.vercel.app/install.sh | sh
 #
 # Env:
 #   VABC_VERSION       version tag to install (default: latest)

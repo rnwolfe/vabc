@@ -2,9 +2,9 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 
-// Canonical site URL. Starts on the Vercel subdomain; cut over to https://vabc.sh
-// once the domain is bought (update here + redeploy + regenerate OG cards).
-const SITE = process.env.SITE_URL || "https://vabc.vercel.app";
+// Canonical site URL. Currently the live Vercel alias; cut over to https://vabc.sh
+// once the domain is bought (update here + redeploy + re-alias + regenerate OG cards).
+const SITE = process.env.SITE_URL || "https://vabc-cli.vercel.app";
 
 export default defineConfig({
   site: SITE,

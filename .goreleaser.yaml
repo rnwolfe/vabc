@@ -36,6 +36,8 @@ sboms:
 
 homebrew_casks:
   - name: vabc
+    # Skipped automatically until the tap repo + GORELEASER_TOKEN exist (HOMEBREW_SKIP).
+    skip_upload: "{{ .Env.HOMEBREW_SKIP }}"
     repository:
       owner: rnwolfe
       name: homebrew-tap
