@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"strconv"
 
 	"github.com/rnwolfe/vabc/internal/errs"
@@ -17,7 +16,7 @@ type StoreCmd struct {
 type StoreListCmd struct{}
 
 func (c *StoreListCmd) Run(rt *Runtime) error {
-	stores, err := rt.Client.Stores(context.Background())
+	stores, err := rt.Client.Stores(rt.Ctx)
 	if err != nil {
 		return liveErr(err)
 	}
@@ -29,7 +28,7 @@ type StoreGetCmd struct {
 }
 
 func (c *StoreGetCmd) Run(rt *Runtime) error {
-	stores, err := rt.Client.Stores(context.Background())
+	stores, err := rt.Client.Stores(rt.Ctx)
 	if err != nil {
 		return liveErr(err)
 	}
@@ -46,7 +45,7 @@ type StoreNearCmd struct {
 }
 
 func (c *StoreNearCmd) Run(rt *Runtime) error {
-	ctx := context.Background()
+	ctx := rt.Ctx
 	lat, lng, err := resolveLocation(ctx, rt, c.Location)
 	if err != nil {
 		return err

@@ -3,11 +3,13 @@
 package cli
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -33,6 +35,11 @@ type CLI struct {
 	Select   string `help:"Comma-separated dot-path field projection, e.g. productCode,name."`
 	Concise  bool   `help:"Terser output (default)."`
 	Detailed bool   `help:"Richer output."`
+
+	// Prompt-injection hardening (contract §8). Free text from the target (lottery
+	// event titles) is fenced as untrusted by default so a downstream agent does not
+	// execute instructions embedded in fetched content.
+	WrapUntrusted bool `negatable:"" default:"true" help:"Fence untrusted target text with markers (default on)."`
 
 	// Safety (contract §2). Inert here — present for uniformity; vabc is read-only.
 	AllowMutations bool `help:"Permit state-changing operations (no-op: vabc is read-only)."`
@@ -72,6 +79,7 @@ type Runtime struct {
 	Client  vabc.Client     // live Virginia ABC API
 	Catalog catalog.Catalog // product snapshot (may be nil if it failed to load)
 	Stdin   io.Reader
+	Ctx     context.Context // cancelled on SIGINT/SIGTERM
 }
 
 // Guard enforces the read-only-by-default mutation gate (contract §2). vabc exposes
@@ -90,7 +98,13 @@ func Run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	helpShown := false
 	parser, err := kong.New(&cfg,
 		kong.Name("vabc"),
-		kong.Description("Search Virginia ABC products and check store inventory from the command line."),
+		kong.Description("Search Virginia ABC products and check store inventory from the command line.\n\n"+
+			"Examples:\n"+
+			"  vabc product search bourbon --allocated\n"+
+			"  vabc inventory check 010807 --near 22182\n"+
+			"  vabc --json store near 22182 --limit 3 | jq '.[].storeNumber'\n"+
+			"  vabc catalog refresh --from-xlsx ./q3-2026-price-list.xlsx\n\n"+
+			"Read-only; no authentication required. See `vabc agent` for the full agent guide."),
 		kong.Writers(stdout, stderr),
 		kong.Exit(func(int) { helpShown = true }), // --help/--version: we control exit
 	)
@@ -110,7 +124,10 @@ func Run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	if cfg.JSON {
 		cfg.Format = "json"
 	}
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
 	rt := newRuntime(&cfg, stdin, stdout, stderr)
+	rt.Ctx = ctx
 
 	if err := kctx.Run(rt); err != nil {
 		return emitError(rt, err)
@@ -209,7 +226,12 @@ func isTTY(w io.Writer) bool {
 // emitError prints a structured error to stderr and returns its exit code (contract §3).
 func emitError(rt *Runtime, err error) int {
 	var ce *errs.CLIError
-	if !errors.As(err, &ce) {
+	switch {
+	case errors.As(err, &ce):
+		// already structured
+	case errors.Is(err, context.Canceled):
+		ce = errs.New(errs.ExitCancelled, "CANCELLED", "operation cancelled", "")
+	default:
 		ce = errs.New(errs.ExitGeneric, "INTERNAL", err.Error(), "")
 	}
 	if rt.Out.Format == output.FormatJSON {

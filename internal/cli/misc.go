@@ -1,7 +1,10 @@
 package cli
 
 import (
+	"context"
+	"errors"
 	"strconv"
+	"time"
 
 	"github.com/alecthomas/kong"
 
@@ -34,7 +37,9 @@ func (c *AuthStatusCmd) Run(rt *Runtime) error {
 // agents. cli-implement adds live reachability probes for the inventory + ArcGIS
 // endpoints behind a --network/--online flag.
 
-type DoctorCmd struct{}
+type DoctorCmd struct {
+	Online bool `help:"Also probe live endpoint reachability (makes network requests)."`
+}
 
 func (c *DoctorCmd) Run(rt *Runtime) error {
 	checks := []map[string]any{}
@@ -53,9 +58,21 @@ func (c *DoctorCmd) Run(rt *Runtime) error {
 	}
 	checks = append(checks,
 		map[string]any{"name": "auth", "ok": true, "detail": "no authentication required"},
-		map[string]any{"name": "inventory_endpoint", "ok": true, "detail": "configured: " + vabc.DefaultBaseURL + " (live probe added by cli-implement)"},
-		map[string]any{"name": "stores_endpoint", "ok": true, "detail": "configured: ArcGIS FeatureServer (live probe added by cli-implement)"},
 	)
+
+	if c.Online {
+		ctx, cancel := context.WithTimeout(rt.Ctx, 12*time.Second)
+		defer cancel()
+		_, invErr := rt.Client.Warehouse(ctx, "010807")
+		checks = append(checks, probe("inventory_endpoint", vabc.DefaultBaseURL, invErr))
+		_, stErr := rt.Client.Stores(ctx)
+		checks = append(checks, probe("stores_endpoint", "ArcGIS FeatureServer", stErr))
+	} else {
+		checks = append(checks,
+			map[string]any{"name": "inventory_endpoint", "ok": true, "detail": "configured: " + vabc.DefaultBaseURL + " (pass --online to probe)"},
+			map[string]any{"name": "stores_endpoint", "ok": true, "detail": "configured: ArcGIS FeatureServer (pass --online to probe)"},
+		)
+	}
 
 	allOK := true
 	for _, ch := range checks {
@@ -67,6 +84,18 @@ func (c *DoctorCmd) Run(rt *Runtime) error {
 		return errs.New(errs.ExitConfig, "DOCTOR_FAILED", "one or more checks failed", "see the failing check's detail")
 	}
 	return rt.Out.Emit(map[string]any{"ok": true, "checks": checks})
+}
+
+// probe classifies a live reachability result for doctor.
+func probe(name, target string, err error) map[string]any {
+	if err == nil {
+		return map[string]any{"name": name, "ok": true, "detail": "reachable: " + target}
+	}
+	var ae *vabc.APIError
+	if errors.As(err, &ae) && ae.Kind == vabc.KindRateLimited {
+		return map[string]any{"name": name, "ok": false, "detail": "throttled/blocked (try later or --wait): " + target}
+	}
+	return map[string]any{"name": name, "ok": false, "detail": "unreachable: " + err.Error()}
 }
 
 // --- schema -----------------------------------------------------------------

@@ -1,0 +1,270 @@
+{
+  "commands": {
+    "flags": [
+      {
+        "default": "plain",
+        "help": "Output format: json, plain, or tsv.",
+        "name": "format"
+      },
+      {
+        "help": "Shorthand for --format=json.",
+        "name": "json"
+      },
+      {
+        "help": "Disable colored output.",
+        "name": "no-color"
+      },
+      {
+        "default": "50",
+        "help": "Maximum items to return for list operations.",
+        "name": "limit"
+      },
+      {
+        "help": "Comma-separated dot-path field projection, e.g. productCode,name.",
+        "name": "select"
+      },
+      {
+        "help": "Terser output (default).",
+        "name": "concise"
+      },
+      {
+        "help": "Richer output.",
+        "name": "detailed"
+      },
+      {
+        "default": "true",
+        "help": "Fence untrusted target text with markers (default on).",
+        "name": "wrap-untrusted"
+      },
+      {
+        "help": "Permit state-changing operations (no-op: vabc is read-only).",
+        "name": "allow-mutations"
+      },
+      {
+        "help": "Print intended mutations without performing them (no-op: vabc is read-only).",
+        "name": "dry-run"
+      },
+      {
+        "help": "Assume yes for confirmations (no-op: vabc is read-only).",
+        "name": "yes"
+      },
+      {
+        "help": "Bypass safety checks (no-op: vabc is read-only).",
+        "name": "force"
+      },
+      {
+        "help": "Never prompt; fail with exit 13 instead.",
+        "name": "no-input"
+      },
+      {
+        "help": "Wait out throttle/backoff instead of failing fast.",
+        "name": "wait"
+      },
+      {
+        "default": "30s",
+        "help": "Maximum time to wait when --wait is set.",
+        "name": "max-wait"
+      }
+    ],
+    "name": "vabc",
+    "subcommands": [
+      {
+        "help": "Search and look up products (catalog snapshot).",
+        "name": "product",
+        "subcommands": [
+          {
+            "args": [
+              {
+                "help": "Keyword matched against product name or code (omit to browse).",
+                "name": "query"
+              }
+            ],
+            "flags": [
+              {
+                "help": "Filter by product type or category, e.g. bourbon, gin.",
+                "name": "type"
+              },
+              {
+                "help": "Only allocated / limited-availability products.",
+                "name": "allocated"
+              }
+            ],
+            "help": "Search the catalog snapshot by keyword.",
+            "name": "search"
+          },
+          {
+            "args": [
+              {
+                "help": "6-digit product code (e.g. 010807).",
+                "name": "code"
+              }
+            ],
+            "help": "Get one product by 6-digit product code.",
+            "name": "get"
+          }
+        ]
+      },
+      {
+        "help": "Check live per-store and warehouse inventory.",
+        "name": "inventory",
+        "subcommands": [
+          {
+            "args": [
+              {
+                "help": "6-digit product code (e.g. 010807).",
+                "name": "code"
+              }
+            ],
+            "flags": [
+              {
+                "help": "Anchor store number (e.g. 219).",
+                "name": "store"
+              },
+              {
+                "help": "Resolve the nearest store from a 5-digit ZIP or \"lat,lng\" instead of --store.",
+                "name": "near"
+              }
+            ],
+            "help": "Live per-store availability of a product, with nearby stores.",
+            "name": "check"
+          },
+          {
+            "args": [
+              {
+                "help": "6-digit product code.",
+                "name": "code"
+              }
+            ],
+            "help": "Statewide central-warehouse stock of a product.",
+            "name": "warehouse"
+          }
+        ]
+      },
+      {
+        "help": "List and locate Virginia ABC stores.",
+        "name": "store",
+        "subcommands": [
+          {
+            "help": "List all Virginia ABC stores.",
+            "name": "list"
+          },
+          {
+            "args": [
+              {
+                "help": "ABC store number (e.g. 219).",
+                "name": "number"
+              }
+            ],
+            "help": "Get one store by store number.",
+            "name": "get"
+          },
+          {
+            "args": [
+              {
+                "help": "A 5-digit ZIP or \"lat,lng\" to search near.",
+                "name": "location"
+              }
+            ],
+            "help": "Find stores nearest a location.",
+            "name": "near"
+          }
+        ]
+      },
+      {
+        "help": "Check limited-availability / allocated releases.",
+        "name": "lottery",
+        "subcommands": [
+          {
+            "args": [
+              {
+                "help": "6-digit product code.",
+                "name": "code"
+              }
+            ],
+            "help": "Check active limited-availability events for a product.",
+            "name": "check"
+          }
+        ]
+      },
+      {
+        "help": "Inspect or refresh the local product catalog snapshot.",
+        "name": "catalog",
+        "subcommands": [
+          {
+            "help": "Show catalog snapshot freshness and source.",
+            "name": "status"
+          },
+          {
+            "flags": [
+              {
+                "help": "Path to a downloaded ABC quarterly price-list .xlsx.",
+                "name": "from-xlsx"
+              },
+              {
+                "help": "Override the snapshot output path (default: XDG cache).",
+                "name": "out"
+              }
+            ],
+            "help": "Rebuild the local snapshot from a downloaded ABC price list.",
+            "name": "refresh"
+          }
+        ]
+      },
+      {
+        "help": "Authentication status (none required for Virginia ABC).",
+        "name": "auth",
+        "subcommands": [
+          {
+            "help": "Show authentication status (none required).",
+            "name": "status"
+          }
+        ]
+      },
+      {
+        "flags": [
+          {
+            "help": "Also probe live endpoint reachability (makes network requests).",
+            "name": "online"
+          }
+        ],
+        "help": "Diagnose setup and report fixes.",
+        "name": "doctor"
+      },
+      {
+        "help": "Print the machine-readable command schema (JSON).",
+        "name": "schema"
+      },
+      {
+        "help": "Print the bundled agent SKILL.md.",
+        "name": "agent"
+      },
+      {
+        "help": "Print the version.",
+        "name": "version"
+      }
+    ]
+  },
+  "exit_codes": {
+    "auth_required": 4,
+    "cancelled": 130,
+    "catalog_stale": 14,
+    "catalog_unavailable": 11,
+    "config_error": 10,
+    "empty_results": 3,
+    "generic_error": 1,
+    "input_required": 13,
+    "mutation_blocked": 12,
+    "not_found": 5,
+    "ok": 0,
+    "permission": 6,
+    "rate_limited": 7,
+    "retryable": 8,
+    "usage": 2
+  },
+  "safety": {
+    "allow_mutations": false,
+    "dry_run": false,
+    "no_input": false
+  },
+  "tool": "vabc"
+}

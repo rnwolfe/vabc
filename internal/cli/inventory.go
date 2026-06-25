@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"context"
-
 	"github.com/rnwolfe/vabc/internal/errs"
 )
 
@@ -19,7 +17,7 @@ type InventoryCheckCmd struct {
 }
 
 func (c *InventoryCheckCmd) Run(rt *Runtime) error {
-	ctx := context.Background()
+	ctx := rt.Ctx
 	store := c.Store
 
 	if c.Near != "" {
@@ -56,7 +54,7 @@ type InventoryWarehouseCmd struct {
 }
 
 func (c *InventoryWarehouseCmd) Run(rt *Runtime) error {
-	res, err := rt.Client.Warehouse(context.Background(), c.Code)
+	res, err := rt.Client.Warehouse(rt.Ctx, c.Code)
 	if err != nil {
 		return liveErr(err)
 	}
