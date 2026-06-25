@@ -6,6 +6,7 @@ import { mkdirSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { glob } from "node:fs/promises";
+import sharp from "sharp";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const outDir = join(root, "public", "og");
@@ -68,11 +69,15 @@ for (const c of cards) {
   const f = join(tmp, c.slug + ".html");
   writeFileSync(f, html(c));
   const out = join(outDir, c.slug + ".png");
+  const raw = join(tmp, c.slug + "-raw.png");
+  // This headless Chrome only paints ~half the requested window height, which clipped the
+  // bottom board/bar — render at 2× height and crop the top 1200×630 with sharp.
   execFileSync(CHROME, [
     "--headless=new", "--disable-gpu", "--hide-scrollbars",
-    "--force-device-scale-factor=1", "--window-size=1200,630",
-    "--screenshot=" + out, "file://" + f,
+    "--force-device-scale-factor=1", "--window-size=1200,1260",
+    "--screenshot=" + raw, "file://" + f,
   ], { stdio: "ignore" });
+  await sharp(raw).extract({ left: 0, top: 0, width: 1200, height: 630 }).toFile(out);
   console.log("wrote", out);
 }
 rmSync(tmp, { recursive: true, force: true });
