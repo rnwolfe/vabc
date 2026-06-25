@@ -8,15 +8,6 @@ sidebar:
 `vabc` is a single static binary with no runtime dependencies. Pick the method that fits
 your workflow; all four install the same binary.
 
-## Go
-
-```bash
-go install github.com/rnwolfe/vabc/cmd/vabc@latest
-```
-
-Requires Go 1.25+. The binary lands in `$(go env GOPATH)/bin` — make sure that directory is on
-your `PATH`. To pin a version, replace `@latest` with `@vX.Y.Z`.
-
 ## Homebrew (macOS)
 
 ```bash
@@ -26,6 +17,15 @@ brew install rnwolfe/tap/vabc
 Distributed as a Homebrew **cask**, so this is macOS-only; `brew upgrade vabc` manages updates and
 the cask clears macOS Gatekeeper automatically. On Linux or Windows, use `go install`, the install
 script, or a prebuilt binary.
+
+## Go
+
+```bash
+go install github.com/rnwolfe/vabc/cmd/vabc@latest
+```
+
+Requires Go 1.25+. The binary lands in `$(go env GOPATH)/bin` — make sure that directory is on
+your `PATH`. To pin a version, replace `@latest` with `@vX.Y.Z`.
 
 ## Install script
 

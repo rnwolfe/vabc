@@ -37,14 +37,19 @@ inventory.
 ## Install
 
 ```bash
+# Homebrew (macOS) — recommended
+brew install rnwolfe/tap/vabc
+
 # Go
 go install github.com/rnwolfe/vabc/cmd/vabc@latest
 
-# Homebrew (macOS)
-brew install rnwolfe/tap/vabc
-
-# Or grab a prebuilt binary from the Releases page.
+# Shell script (macOS/Linux) — checksummed
+curl -fsSL https://vabc-cli.vercel.app/install.sh | sh
 ```
+
+Prebuilt, checksummed binaries for macOS / Linux / Windows are on the
+[Releases page](https://github.com/rnwolfe/vabc/releases/latest). See the
+[full install guide](https://vabc-cli.vercel.app/docs/start/install/) for details.
 
 ## Quickstart
 

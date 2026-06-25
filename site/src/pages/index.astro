@@ -103,17 +103,12 @@ const nearby = [
         <p class="sec-sub reveal">A single static binary, no runtime deps, no login. Pick your poison.</p>
         <div class="install-tabs reveal">
           <div class="tabs" role="tablist" aria-label="Install method">
-            <button class="tab is-active" role="tab" aria-selected="true" data-tab="curl">curl</button>
-            <button class="tab" role="tab" aria-selected="false" data-tab="brew">Homebrew</button>
+            <button class="tab is-active" role="tab" aria-selected="true" data-tab="brew">Homebrew</button>
             <button class="tab" role="tab" aria-selected="false" data-tab="go">Go</button>
+            <button class="tab" role="tab" aria-selected="false" data-tab="curl">curl</button>
             <button class="tab" role="tab" aria-selected="false" data-tab="bin">Binary</button>
           </div>
-          <div class="panel is-active" data-panel="curl">
-            <span class="prompt">$</span>
-            <code>curl -fsSL https://vabc-cli.vercel.app/install.sh | sh</code>
-            <button class="cp" type="button" aria-label="Copy">copy</button>
-          </div>
-          <div class="panel" data-panel="brew">
+          <div class="panel is-active" data-panel="brew">
             <span class="prompt">$</span>
             <code>brew install rnwolfe/tap/vabc</code>
             <button class="cp" type="button" aria-label="Copy">copy</button>
@@ -121,6 +116,11 @@ const nearby = [
           <div class="panel" data-panel="go">
             <span class="prompt">$</span>
             <code>go install github.com/rnwolfe/vabc/cmd/vabc@latest</code>
+            <button class="cp" type="button" aria-label="Copy">copy</button>
+          </div>
+          <div class="panel" data-panel="curl">
+            <span class="prompt">$</span>
+            <code>curl -fsSL https://vabc-cli.vercel.app/install.sh | sh</code>
             <button class="cp" type="button" aria-label="Copy">copy</button>
           </div>
           <div class="panel" data-panel="bin">
