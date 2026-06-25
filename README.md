@@ -40,7 +40,7 @@ inventory.
 # Go
 go install github.com/rnwolfe/vabc/cmd/vabc@latest
 
-# Homebrew (after first release)
+# Homebrew (macOS)
 brew install rnwolfe/tap/vabc
 
 # Or grab a prebuilt binary from the Releases page.
