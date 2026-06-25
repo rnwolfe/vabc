@@ -14,6 +14,27 @@ import (
 // staleAfterDays is the freshness threshold; the ABC price list refreshes quarterly.
 const staleAfterDays = 120
 
+// catalogStale reports whether the loaded snapshot is older than the threshold.
+func (rt *Runtime) catalogStale() bool {
+	if rt.Catalog == nil {
+		return false
+	}
+	t, err := time.Parse("2006-01-02", rt.Catalog.SnapshotDate())
+	if err != nil {
+		return false
+	}
+	return time.Since(t) > staleAfterDays*24*time.Hour
+}
+
+// warnIfStale emits a one-line refresh hint to stderr only when the catalog is
+// stale. A current snapshot prints nothing (no per-call scope noise).
+func (rt *Runtime) warnIfStale() {
+	if rt.catalogStale() {
+		rt.Out.Info("note: catalog snapshot is from %s; run `vabc catalog refresh` to update",
+			rt.Catalog.SnapshotDate())
+	}
+}
+
 // CatalogCmd manages the local product catalog snapshot.
 type CatalogCmd struct {
 	Status  CatalogStatusCmd  `cmd:"" help:"Show catalog snapshot freshness and source."`
@@ -26,17 +47,12 @@ func (c *CatalogStatusCmd) Run(rt *Runtime) error {
 	if rt.Catalog == nil {
 		return errs.CatalogUnavailable()
 	}
-	date := rt.Catalog.SnapshotDate()
-	stale := false
-	if t, err := time.Parse("2006-01-02", date); err == nil {
-		stale = time.Since(t) > staleAfterDays*24*time.Hour
-	}
 	return rt.Out.Emit(map[string]any{
 		"schemaVersion": vabc.SchemaVersion,
-		"snapshotDate":  date,
+		"snapshotDate":  rt.Catalog.SnapshotDate(),
 		"productCount":  rt.Catalog.Count(),
 		"source":        rt.Catalog.Source(),
-		"stale":         stale,
+		"stale":         rt.catalogStale(),
 	})
 }
 

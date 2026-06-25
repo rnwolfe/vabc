@@ -32,8 +32,7 @@ func (c *ProductSearchCmd) Run(rt *Runtime) error {
 		return errs.New(errs.ExitCatalogUnavailable, "CATALOG_ERROR", err.Error(),
 			"run: vabc catalog refresh --from-xlsx <price-list.xlsx>")
 	}
-	rt.Out.Info("scope: catalog snapshot %s (%s); run `vabc catalog refresh` for newer data",
-		rt.Catalog.SnapshotDate(), rt.Catalog.Source())
+	rt.warnIfStale()
 	return rt.Out.Emit(products)
 }
 
@@ -53,6 +52,6 @@ func (c *ProductGetCmd) Run(rt *Runtime) error {
 	if !ok {
 		return errs.NotFound("product", c.Code)
 	}
-	rt.Out.Info("scope: catalog snapshot %s (%s)", rt.Catalog.SnapshotDate(), rt.Catalog.Source())
+	rt.warnIfStale()
 	return rt.Out.Emit(p)
 }
