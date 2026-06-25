@@ -1,0 +1,238 @@
+---
+import "../styles/landing.css";
+const SITE = import.meta.env.SITE || "https://vabc.vercel.app";
+const repo = "https://github.com/rnwolfe/vabc";
+const nearby = [
+  { store: "219", city: "Vienna", qty: 21, mi: "0.0" },
+  { store: "231", city: "Vienna", qty: 26, mi: "1.2" },
+  { store: "76", city: "Falls Church", qty: 33, mi: "2.8" },
+  { store: "346", city: "Falls Church", qty: 14, mi: "2.9" },
+  { store: "267", city: "McLean", qty: 0, mi: "3.3" },
+];
+---
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>vabc — Virginia ABC inventory from your terminal</title>
+    <meta
+      name="description"
+      content="Search the Virginia ABC catalog and check live store inventory from the command line. Agent-friendly: JSON, stable exit codes, embedded schema. Read-only, no login."
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={SITE + "/"} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="vabc — Find the bottle. Skip the website." />
+    <meta property="og:description" content="Virginia ABC product search and live store inventory, from your terminal. Agent-friendly and read-only." />
+    <meta property="og:image" content={SITE + "/og/landing.png"} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content={SITE + "/og/landing.png"} />
+    <script is:inline>
+      document.documentElement.classList.remove("no-js");
+      document.documentElement.classList.add("js");
+    </script>
+  </head>
+  <body>
+    <nav class="nav">
+      <div class="wrap">
+        <a class="brand" href="/">
+          <img src="/favicon.svg" alt="" /> vabc <span class="tag">v0.1.0</span>
+        </a>
+        <span class="spacer"></span>
+        <a class="link" href="/docs/start/getting-started/">Docs</a>
+        <a class="link" href={repo}>GitHub ↗</a>
+      </div>
+    </nav>
+
+    <!-- HERO -->
+    <header class="hero">
+      <div class="wrap">
+        <div>
+          <span class="kicker reveal">Virginia ABC · unofficial CLI</span>
+          <h1 class="title reveal" style="animation-delay:.05s">
+            Find the bottle.<br /><span class="glow">Skip the website.</span>
+          </h1>
+          <p class="lede reveal" style="animation-delay:.1s">
+            Search the Virginia ABC catalog and check live store inventory from your terminal —
+            including allocated and online-only bottles the price list never shows. One command,
+            real stock, ranked by distance.
+          </p>
+          <div class="cmdline reveal" style="animation-delay:.15s">
+            <span class="prompt">$</span>
+            <code id="cmd">vabc inventory check 953714 --near 22182</code>
+            <button id="copy" type="button" aria-label="Copy command">copy</button>
+          </div>
+          <div class="cta reveal" style="animation-delay:.2s">
+            <a class="btn primary" href="/docs/start/getting-started/">Get started →</a>
+            <a class="btn ghost" href={repo}>View on GitHub</a>
+          </div>
+        </div>
+
+        <!-- THE STOCK BOARD -->
+        <div class="board reveal" aria-label="Example: nearby stores with stock" style="animation-delay:.1s">
+          <div class="head">
+            <span class="dot"></span>
+            <span class="q">Planteray O.F.T.D · <b>953714</b> · near <b>22182</b></span>
+          </div>
+          <table>
+            <thead>
+              <tr><th>Store</th><th>City</th><th class="r">Qty</th><th class="r">Miles</th></tr>
+            </thead>
+            <tbody>
+              {nearby.map((s, i) => (
+                <tr>
+                  <td class="store"><span class="flap" style={`animation-delay:${0.25 + i * 0.09}s`}>#{s.store}</span></td>
+                  <td><span class="flap" style={`animation-delay:${0.29 + i * 0.09}s`}>{s.city}</span></td>
+                  <td class="r"><span class={`flap qty ${s.qty === 0 ? "zero" : ""}`} style={`animation-delay:${0.33 + i * 0.09}s`}>{s.qty === 0 ? "out" : s.qty}</span></td>
+                  <td class="r"><span class="flap" style={`animation-delay:${0.37 + i * 0.09}s`}>{s.mi}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </header>
+
+    <!-- COMPARISON -->
+    <section class="band">
+      <div class="wrap">
+        <span class="eyebrow reveal">The point</span>
+        <h2 class="sec reveal">Two ways to find a bottle.</h2>
+        <p class="sec-sub reveal">
+          The website makes you click. <code>vabc</code> answers in one line — and returns the
+          product code, so the next call just works.
+        </p>
+        <div class="versus">
+          <div class="vcard bad reveal">
+            <div class="vhead">✕ abc.virginia.gov</div>
+            <div class="vbody">
+              <ul class="steps">
+                <li>Load the JS-heavy storefront</li>
+                <li>Type into search, wait for results</li>
+                <li>Click the product page</li>
+                <li>Open the "check my store" widget</li>
+                <li>Pick a store from a dropdown</li>
+                <li>Repeat for every nearby store…</li>
+              </ul>
+            </div>
+          </div>
+          <div class="vcard good reveal" style="animation-delay:.08s">
+            <div class="vhead">✓ vabc</div>
+            <div class="vbody">
+              <div class="term">
+                <span class="p">$ </span><span class="c">vabc inventory check 953714 --near 22182</span>
+                <span class="o">store <b>#219</b> Vienna &nbsp; qty <span class="g">21</span> &nbsp; 0.0 mi</span>
+                <span class="o">store <b>#231</b> Vienna &nbsp; qty <span class="g">26</span> &nbsp; 1.2 mi</span>
+                <span class="o">store <b>#76</b>&nbsp; Falls Church &nbsp; qty <span class="g">33</span> &nbsp; 2.8 mi</span>
+                <span class="o">store <b>#267</b> McLean &nbsp; qty <span class="a">out</span> &nbsp; 3.3 mi</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- AGENT CONTRACT -->
+    <section class="band">
+      <div class="wrap">
+        <span class="eyebrow reveal">Not just for humans</span>
+        <h2 class="sec reveal">Built for agents, too.</h2>
+        <p class="sec-sub reveal">
+          Every command is engineered for autonomous callers: structured, bounded, self-describing,
+          and safe by default.
+        </p>
+        <div class="grid">
+          <div class="gcard reveal">
+            <h3>Structured output</h3>
+            <p>JSON on stdout, notes on stderr. Field projection and bounded results.</p>
+            <pre>vabc --json product search rum \
+  --select productCode,name</pre>
+          </div>
+          <div class="gcard reveal" style="animation-delay:.05s">
+            <h3>Stable exit codes</h3>
+            <p>Distinct, documented codes — not a bare <code>1</code>. <code>5</code> not found, <code>7</code> rate-limited…</p>
+            <pre>{`{ "error": …, "code": "NOT_FOUND",
+  "remediation": … }`}</pre>
+          </div>
+          <div class="gcard reveal" style="animation-delay:.1s">
+            <h3>Self-describing</h3>
+            <p>The full usage contract ships inside the binary — no repo, no network.</p>
+            <pre>vabc agent
+vabc schema --json</pre>
+          </div>
+          <div class="gcard reveal">
+            <h3>Read-only by default</h3>
+            <p>No mutating commands. A default-deny gate guards any future write.</p>
+            <pre>vabc inventory check … # safe</pre>
+          </div>
+          <div class="gcard reveal" style="animation-delay:.05s">
+            <h3>Prompt-injection fenced</h3>
+            <p>Untrusted target text is wrapped so an agent won't execute it.</p>
+            <pre>⟦UNTRUSTED⟧ … ⟦/UNTRUSTED⟧</pre>
+          </div>
+          <div class="gcard reveal" style="animation-delay:.1s">
+            <h3>Polite by design</h3>
+            <p>Persistent cross-process throttle. No login, no secrets, no scraping evasion.</p>
+            <pre>go get github.com/rnwolfe/vabc</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CLOSING -->
+    <section class="closing">
+      <div class="wrap">
+        <span class="eyebrow reveal">Ready in one line</span>
+        <h2 class="reveal">Start hunting.</h2>
+        <div class="cmdline install reveal" style="animation-delay:.06s">
+          <span class="prompt">$</span>
+          <code id="cmd2">go install github.com/rnwolfe/vabc/cmd/vabc@latest</code>
+          <button id="copy2" type="button" aria-label="Copy install command">copy</button>
+        </div>
+        <div class="cta reveal" style="justify-content:center;animation-delay:.12s">
+          <a class="btn primary" href="/docs/start/getting-started/">Read the docs →</a>
+          <a class="btn ghost" href={repo}>Star on GitHub</a>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="wrap">
+        <p class="disc">
+          <strong>vabc</strong> is an unofficial tool, not affiliated with or endorsed by Virginia
+          ABC. It uses undocumented public endpoints that may change, is read-only, self-throttles,
+          and involves no credentials. © 2026 · MIT.
+        </p>
+        <span>
+          <a href="/docs/start/getting-started/">Docs</a> · <a href={repo}>GitHub</a> ·
+          <a href={repo + "/blob/main/SECURITY.md"}>Security</a>
+        </span>
+      </div>
+    </footer>
+
+    <script is:inline>
+      // Reveal-on-scroll (progressive enhancement; content visible without JS).
+      const io = new IntersectionObserver(
+        (es) => es.forEach((e) => e.isIntersecting && e.target.classList.add("in")),
+        { rootMargin: "0px 0px -8% 0px" },
+      );
+      document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
+      // Copy buttons
+      function wire(btnId, codeId) {
+        const b = document.getElementById(btnId);
+        const c = document.getElementById(codeId);
+        if (!b || !c) return;
+        b.addEventListener("click", async () => {
+          try {
+            await navigator.clipboard.writeText(c.textContent.trim());
+            const t = b.textContent; b.textContent = "copied!";
+            setTimeout(() => (b.textContent = t), 1400);
+          } catch {}
+        });
+      }
+      wire("copy", "cmd"); wire("copy2", "cmd2");
+    </script>
+  </body>
+</html>

@@ -12,6 +12,9 @@
 node_modules/
 .astro/
 .vercel/
+site/dist/
+site/.astro/
+.og-tmp/
 
 # Editor / OS
 .DS_Store

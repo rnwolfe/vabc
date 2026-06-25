@@ -1,0 +1,51 @@
+/* Starlight overrides — atmosphere tied to the shared tokens. */
+
+:root {
+  --sl-nav-height: 3.75rem;
+}
+
+body {
+  font-family: var(--vabc-font-body);
+  background:
+    radial-gradient(1200px 480px at 78% -10%, rgba(232, 177, 90, 0.07), transparent 60%),
+    var(--vabc-bg);
+}
+
+/* Grain overlay (cheap, pure CSS via SVG data-uri) */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: var(--vabc-grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.site-title {
+  font-family: var(--vabc-font-display);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+h1, h2, h3 {
+  font-family: var(--vabc-font-display);
+  letter-spacing: -0.015em;
+}
+
+/* Code blocks get the amber-terminal treatment */
+.expressive-code,
+.sl-markdown-content :not(pre) > code {
+  --vabc-code-border: var(--vabc-line);
+}
+.sl-markdown-content :not(pre) > code {
+  background: var(--vabc-bg-3);
+  border: 1px solid var(--vabc-line);
+  color: var(--vabc-amber-bright);
+  border-radius: 3px;
+}
+
+/* Sidebar current item: amber rail */
+.sl-markdown-content a {
+  text-underline-offset: 3px;
+}

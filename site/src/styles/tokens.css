@@ -1,0 +1,82 @@
+/* vabc — shared design tokens. Imported by BOTH the landing page and Starlight.
+   "The Allocation Board": after-hours amber terminal × split-flap departure board. */
+
+@import "@fontsource/bricolage-grotesque/400.css";
+@import "@fontsource/bricolage-grotesque/700.css";
+@import "@fontsource/bricolage-grotesque/800.css";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+@import "@fontsource/ibm-plex-mono/600.css";
+@import "@fontsource/ibm-plex-sans/400.css";
+@import "@fontsource/ibm-plex-sans/500.css";
+
+:root {
+  /* ---- palette: warm near-black, whiskey gold, shelf accents ---- */
+  --vabc-bg: #0b0a07;
+  --vabc-bg-2: #131009;
+  --vabc-bg-3: #1b160d;
+  --vabc-panel: #16120b;
+  --vabc-line: #2c2417;
+  --vabc-line-2: #3d3320;
+
+  --vabc-amber: #e8b15a; /* dominant — whiskey gold */
+  --vabc-amber-bright: #f7cf83;
+  --vabc-amber-deep: #b9863a;
+
+  --vabc-stock: #6bd49a; /* in-stock green */
+  --vabc-allocated: #e8604a; /* allocated / lottery red */
+  --vabc-blue: #6fb0e8; /* secondary data accent */
+
+  --vabc-text: #efe7d6;
+  --vabc-text-dim: #b6a98f;
+  --vabc-text-mute: #8a7d64;
+
+  /* ---- type ---- */
+  --vabc-font-display: "Bricolage Grotesque", ui-sans-serif, sans-serif;
+  --vabc-font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
+  --vabc-font-body: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+
+  /* ---- space / shape ---- */
+  --vabc-radius: 4px;
+  --vabc-radius-lg: 10px;
+  --vabc-maxw: 1120px;
+  --vabc-shadow: 0 24px 60px -28px rgba(0, 0, 0, 0.85);
+  --vabc-glow: 0 0 0 1px var(--vabc-line), 0 18px 50px -22px rgba(232, 177, 90, 0.18);
+
+  /* atmosphere */
+  --vabc-grain-opacity: 0.04;
+}
+
+/* ---- Starlight theme mapping (dark, branded) ---- */
+:root,
+:root[data-theme="dark"] {
+  --sl-font: var(--vabc-font-body);
+  --sl-font-mono: var(--vabc-font-mono);
+  --sl-color-accent-low: #3a2a12;
+  --sl-color-accent: var(--vabc-amber-deep);
+  --sl-color-accent-high: var(--vabc-amber-bright);
+  --sl-color-white: var(--vabc-text);
+  --sl-color-gray-1: #e7ddca;
+  --sl-color-gray-2: var(--vabc-text-dim);
+  --sl-color-gray-3: var(--vabc-text-mute);
+  --sl-color-gray-4: #564a36;
+  --sl-color-gray-5: #2c2417;
+  --sl-color-gray-6: #1a150d;
+  --sl-color-black: var(--vabc-bg);
+  --sl-color-bg: var(--vabc-bg);
+  --sl-color-bg-nav: rgba(11, 10, 7, 0.85);
+  --sl-color-bg-sidebar: var(--vabc-bg-2);
+  --sl-color-hairline: var(--vabc-line);
+  --sl-color-text-accent: var(--vabc-amber-bright);
+}
+
+/* Light mode: warm paper, ink, amber accents */
+:root[data-theme="light"] {
+  --sl-color-accent: #9a6a1f;
+  --sl-color-accent-high: #6f4a12;
+  --sl-color-white: #1c1407;
+  --sl-color-bg: #f7f1e4;
+  --sl-color-bg-nav: rgba(247, 241, 228, 0.9);
+  --sl-color-bg-sidebar: #efe6d3;
+  --sl-color-hairline: #ddd0b6;
+}
