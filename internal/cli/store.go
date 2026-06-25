@@ -42,17 +42,16 @@ func (c *StoreGetCmd) Run(rt *Runtime) error {
 }
 
 type StoreNearCmd struct {
-	Location string `arg:"" help:"\"lat,lng\" to search near (ZIP resolution is added in cli-implement)."`
+	Location string `arg:"" help:"A 5-digit ZIP or \"lat,lng\" to search near."`
 }
 
 func (c *StoreNearCmd) Run(rt *Runtime) error {
-	lat, lng, ok := parseLatLng(c.Location)
-	if !ok {
-		return errs.New(errs.ExitUsage, "USAGE",
-			"location must be \"lat,lng\" (ZIP resolution is added in cli-implement)",
-			"e.g. vabc store near 38.91,-77.23")
+	ctx := context.Background()
+	lat, lng, err := resolveLocation(ctx, rt, c.Location)
+	if err != nil {
+		return err
 	}
-	stores, err := rt.Client.StoreNear(context.Background(), lat, lng, rt.Cfg.Limit)
+	stores, err := rt.Client.StoreNear(ctx, lat, lng, rt.Cfg.Limit)
 	if err != nil {
 		return liveErr(err)
 	}

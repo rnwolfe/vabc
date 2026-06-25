@@ -3,6 +3,8 @@ package cli
 import (
 	"bytes"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 )
@@ -19,6 +21,9 @@ func setup(t *testing.T) {
 	t.Setenv("NO_COLOR", "1")
 	// Ensure tests never pick up a developer's cached catalog; rely on the embedded seed.
 	t.Setenv("VABC_CATALOG", "")
+	// Isolate throttle state and disable spacing so tests are fast and hermetic.
+	t.Setenv("VABC_STATE_DIR", t.TempDir())
+	t.Setenv("VABC_MIN_INTERVAL_MS", "0")
 }
 
 // --- catalog-backed reads (work offline via the embedded seed snapshot) ------
@@ -170,13 +175,41 @@ func TestGuardBlocksByDefault(t *testing.T) {
 	}
 }
 
-// --- live commands are wired and return structured errors (placeholder client) -
+// --- live commands are wired end-to-end (httptest, no real network) ----------
+
+func TestLiveWarehouseSuccess(t *testing.T) {
+	setup(t)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"warehouseInventory":"42"}`))
+	}))
+	defer srv.Close()
+	t.Setenv("VABC_BASE_URL", srv.URL)
+
+	out, _, code := run(t, "inventory", "warehouse", "010807", "--json")
+	if code != 0 {
+		t.Fatalf("exit = %d, want 0\n%s", code, out)
+	}
+	var res map[string]any
+	if err := json.Unmarshal([]byte(out), &res); err != nil {
+		t.Fatalf("not valid JSON: %v\n%s", err, out)
+	}
+	if res["warehouseInventory"].(float64) != 42 {
+		t.Fatalf("want 42, got %v", res["warehouseInventory"])
+	}
+}
 
 func TestLiveCommandStructuredError(t *testing.T) {
 	setup(t)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer srv.Close()
+	t.Setenv("VABC_BASE_URL", srv.URL)
+
 	out, errb, code := run(t, "inventory", "warehouse", "010807", "--json")
-	if code == 0 {
-		t.Fatalf("placeholder live command should not succeed yet")
+	if code != 8 {
+		t.Fatalf("exit = %d, want 8 (retryable)", code)
 	}
 	if strings.TrimSpace(out) != "" {
 		t.Fatalf("stdout should be empty on error, got: %s", out)

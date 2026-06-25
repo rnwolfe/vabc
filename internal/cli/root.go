@@ -9,7 +9,9 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/alecthomas/kong"
 
@@ -38,6 +40,11 @@ type CLI struct {
 	Yes            bool `help:"Assume yes for confirmations (no-op: vabc is read-only)."`
 	Force          bool `help:"Bypass safety checks (no-op: vabc is read-only)."`
 	NoInput        bool `help:"Never prompt; fail with exit 13 instead."`
+
+	// Backend etiquette (contract §12). Live calls fail fast on a throttle block by
+	// default so an agent loop never deadlocks; --wait opts into waiting it out.
+	Wait    bool          `help:"Wait out throttle/backoff instead of failing fast."`
+	MaxWait time.Duration `default:"30s" help:"Maximum time to wait when --wait is set."`
 
 	// Commands
 	Product   ProductCmd   `cmd:"" help:"Search and look up products (catalog snapshot)."`
@@ -125,10 +132,29 @@ func newRuntime(cfg *CLI, stdin io.Reader, stdout, stderr io.Writer) *Runtime {
 	return &Runtime{
 		Cfg:     cfg,
 		Out:     w,
-		Client:  vabc.NewClient(),
+		Client:  vabc.NewClient(clientOptions(cfg)...),
 		Catalog: loadCatalog(w),
 		Stdin:   stdin,
 	}
+}
+
+// clientOptions builds the live-client options from flags + env overrides.
+// VABC_BASE_URL / VABC_STORES_URL / VABC_MIN_INTERVAL_MS are mainly for testing
+// and advanced use; VABC_STATE_DIR (read by the library) relocates throttle state.
+func clientOptions(cfg *CLI) []vabc.Option {
+	opts := []vabc.Option{vabc.WithWait(cfg.Wait, cfg.MaxWait)}
+	if u := os.Getenv("VABC_BASE_URL"); u != "" {
+		opts = append(opts, vabc.WithBaseURL(u))
+	}
+	if u := os.Getenv("VABC_STORES_URL"); u != "" {
+		opts = append(opts, vabc.WithStoresURL(u))
+	}
+	if ms := os.Getenv("VABC_MIN_INTERVAL_MS"); ms != "" {
+		if n, err := strconv.Atoi(ms); err == nil {
+			opts = append(opts, vabc.WithMinInterval(time.Duration(n)*time.Millisecond))
+		}
+	}
+	return opts
 }
 
 // loadCatalog resolves the catalog snapshot: a fresher local cache (if present)

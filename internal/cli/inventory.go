@@ -15,7 +15,7 @@ type InventoryCmd struct {
 type InventoryCheckCmd struct {
 	Code  string `arg:"" help:"6-digit product code (e.g. 010807)."`
 	Store int    `help:"Anchor store number (e.g. 219)."`
-	Near  string `help:"Resolve the nearest store from \"lat,lng\" instead of --store."`
+	Near  string `help:"Resolve the nearest store from a 5-digit ZIP or \"lat,lng\" instead of --store."`
 }
 
 func (c *InventoryCheckCmd) Run(rt *Runtime) error {
@@ -23,11 +23,9 @@ func (c *InventoryCheckCmd) Run(rt *Runtime) error {
 	store := c.Store
 
 	if c.Near != "" {
-		lat, lng, ok := parseLatLng(c.Near)
-		if !ok {
-			return errs.New(errs.ExitUsage, "USAGE",
-				"--near expects \"lat,lng\" (ZIP resolution is added in cli-implement)",
-				"use --near 38.91,-77.23 or pass --store <number>")
+		lat, lng, err := resolveLocation(ctx, rt, c.Near)
+		if err != nil {
+			return err
 		}
 		stores, err := rt.Client.StoreNear(ctx, lat, lng, 1)
 		if err != nil {
