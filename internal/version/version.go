@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	neturl "net/url"
 	"os"
 	"runtime/debug"
 	"strings"
@@ -63,12 +64,36 @@ func UpgradeHint() string {
 	return "go install github.com/" + slug + "/cmd/" + repo + "@latest"
 }
 
+// safeReleaseURL allows a *_RELEASES_URL override only over https (any host) or http to
+// localhost (for tests). A misconfigured/hostile env var (file://, http://169.254.169.254, …)
+// is ignored — version --check falls back to the default — so the override can't be used for
+// SSRF or local-file reads. Returns "" for empty/disallowed input.
+func safeReleaseURL(raw string) string {
+	if raw == "" {
+		return ""
+	}
+	u, err := neturl.Parse(raw)
+	if err != nil {
+		return ""
+	}
+	switch u.Scheme {
+	case "https":
+		return raw
+	case "http":
+		switch u.Hostname() {
+		case "localhost", "127.0.0.1", "::1":
+			return raw
+		}
+	}
+	return ""
+}
+
 // Latest returns the latest released version tag (from GitHub Releases by default).
 // Network, short timeout, **fail-silent**: returns ("", err) on any problem so a
 // `version --check` never errors or blocks an agent loop. The release source can be
-// overridden with VABC_RELEASES_URL (used in tests).
+// overridden with VABC_RELEASES_URL (used in tests); a disallowed value is ignored.
 func Latest(ctx context.Context) (string, error) {
-	url := os.Getenv("VABC_RELEASES_URL")
+	url := safeReleaseURL(os.Getenv("VABC_RELEASES_URL"))
 	if url == "" {
 		slug := repoSlug()
 		if slug == "" {

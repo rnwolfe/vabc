@@ -6,6 +6,20 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-06-25
+
+### Added
+- **Agent CLI Guidelines v0.4.0 conformance** — spec rolled up to the v0.4.0 standard
+  (declared via `schema`).
+- **`version --check`** — pull-based, fail-silent check against the latest GitHub release;
+  never errors or blocks an agent loop, and carries a `User-Agent` on the request.
+
+### Security
+- **SSRF override-guard on `VABC_RELEASES_URL`** — the release-source override is now
+  scheme-constrained: `https` to any host, or `http` only to `localhost`/`127.0.0.1`/`::1`.
+  Hostile/misconfigured values (`file://`, `http://169.254.169.254`, …) are ignored and the
+  default GitHub Releases URL is used instead.
+
 ## [0.1.1] - 2026-06-25
 
 ### Added
@@ -35,6 +49,7 @@ Initial release.
 - **Backend etiquette** — a persistent, cross-process throttle/circuit-breaker; no evasion.
 - Read-only by design; no authentication required.
 
-[Unreleased]: https://github.com/rnwolfe/vabc/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/rnwolfe/vabc/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/rnwolfe/vabc/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/rnwolfe/vabc/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/rnwolfe/vabc/releases/tag/v0.1.0
