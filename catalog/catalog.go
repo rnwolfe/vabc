@@ -73,7 +73,7 @@ func (s *store) Get(productCode string) (vabc.Product, bool, error) {
 func (s *store) Search(opts SearchOpts) ([]vabc.Product, error) {
 	q := strings.ToLower(strings.TrimSpace(opts.Query))
 	typ := strings.ToLower(strings.TrimSpace(opts.Type))
-	var out []vabc.Product
+	out := make([]vabc.Product, 0) // non-nil so empty search emits [] not null
 	for _, p := range s.snap.Products {
 		if q != "" && !strings.Contains(strings.ToLower(p.Name), q) &&
 			!strings.Contains(strings.ToLower(p.ProductCode), q) {

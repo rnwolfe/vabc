@@ -41,15 +41,39 @@ func (c *CatalogStatusCmd) Run(rt *Runtime) error {
 }
 
 type CatalogRefreshCmd struct {
-	FromXLSX string `name:"from-xlsx" help:"Path to a downloaded ABC quarterly price-list .xlsx." required:""`
+	FromXLSX string `name:"from-xlsx" help:"Use a local ABC price-list .xlsx instead of auto-downloading the latest."`
 	Out      string `help:"Override the snapshot output path (default: XDG cache)."`
 }
 
 func (c *CatalogRefreshCmd) Run(rt *Runtime) error {
-	products, err := harvest.FromXLSX(c.FromXLSX)
-	if err != nil {
-		return errs.New(errs.ExitRetry, "NOT_IMPLEMENTED", err.Error(),
-			"catalog generation is wired in the cli-implement stage")
+	var (
+		products []vabc.Product
+		source   string
+		err      error
+	)
+	if c.FromXLSX != "" {
+		products, err = harvest.FromXLSX(c.FromXLSX)
+		source = "file:" + c.FromXLSX
+		if err != nil {
+			return errs.New(errs.ExitConfig, "PARSE_ERROR", err.Error(),
+				"ensure the file is an ABC quarterly price-list .xlsx")
+		}
+	} else {
+		rt.Out.Info("downloading the latest Virginia ABC price list…")
+		var data []byte
+		data, source, err = vabc.FetchLatestPriceList(rt.Ctx, clientOptions(rt.Cfg)...)
+		if err != nil {
+			return liveErr(err)
+		}
+		products, err = harvest.FromBytes(data)
+		if err != nil {
+			return errs.New(errs.ExitConfig, "PARSE_ERROR", err.Error(),
+				"the downloaded price list could not be parsed; try --from-xlsx with a manual download")
+		}
+	}
+	if len(products) == 0 {
+		return errs.New(errs.ExitConfig, "EMPTY_CATALOG", "no products parsed from the price list",
+			"the price-list format may have changed; please file an issue")
 	}
 
 	out := c.Out
@@ -62,6 +86,7 @@ func (c *CatalogRefreshCmd) Run(rt *Runtime) error {
 	snap := map[string]any{
 		"schemaVersion": vabc.SchemaVersion,
 		"snapshotDate":  time.Now().UTC().Format("2006-01-02"),
+		"source":        source,
 		"products":      products,
 	}
 	b, _ := json.MarshalIndent(snap, "", "  ")
@@ -72,7 +97,8 @@ func (c *CatalogRefreshCmd) Run(rt *Runtime) error {
 		"ok":           true,
 		"snapshotDate": snap["snapshotDate"],
 		"productCount": len(products),
-		"source":       "cache:" + out,
+		"source":       source,
+		"written":      out,
 	})
 }
 

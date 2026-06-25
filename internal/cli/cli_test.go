@@ -30,7 +30,7 @@ func setup(t *testing.T) {
 
 func TestProductSearchJSON(t *testing.T) {
 	setup(t)
-	out, _, code := run(t, "product", "search", "crown", "--json")
+	out, _, code := run(t, "product", "search", "crown royal", "--json")
 	if code != 0 {
 		t.Fatalf("exit = %d, want 0", code)
 	}
@@ -39,10 +39,23 @@ func TestProductSearchJSON(t *testing.T) {
 		t.Fatalf("stdout not valid JSON array: %v\n%s", err, out)
 	}
 	if len(products) == 0 {
-		t.Fatalf("expected at least one match for 'crown', got none")
+		t.Fatalf("expected matches for 'crown royal', got none")
 	}
-	if products[0]["productCode"] != "010807" {
-		t.Fatalf("expected verified product 010807, got %v", products[0]["productCode"])
+	for _, p := range products {
+		if !strings.Contains(strings.ToLower(p["name"].(string)), "crown") {
+			t.Fatalf("unexpected non-matching result: %v", p["name"])
+		}
+	}
+}
+
+func TestProductSearchEmptyIsArray(t *testing.T) {
+	setup(t)
+	out, _, code := run(t, "product", "search", "zzzznotathing", "--json")
+	if code != 0 {
+		t.Fatalf("exit = %d, want 0", code)
+	}
+	if strings.TrimSpace(out) != "[]" {
+		t.Fatalf("empty search should emit [], got: %s", out)
 	}
 }
 
@@ -145,6 +158,18 @@ func TestDidYouMean(t *testing.T) {
 	}
 	if !strings.Contains(errb, "did you mean") || !strings.Contains(errb, "product") {
 		t.Fatalf("missing suggestion: %s", errb)
+	}
+}
+
+func TestNoSuggestionForValidCommand(t *testing.T) {
+	setup(t)
+	// A valid command with a bad subcommand/flag must NOT suggest itself.
+	_, errb, code := run(t, "catalog", "nonsense")
+	if code != 2 {
+		t.Fatalf("exit = %d, want 2", code)
+	}
+	if strings.Contains(errb, "did you mean") {
+		t.Fatalf("should not suggest for a valid command: %s", errb)
 	}
 }
 

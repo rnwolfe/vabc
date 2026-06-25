@@ -185,3 +185,40 @@ func isRate(err error) bool {
 	var ae *vabc.APIError
 	return errors.As(err, &ae) && ae.Kind == vabc.KindRateLimited
 }
+
+func TestFetchLatestPriceList(t *testing.T) {
+	page := `<html><body>
+	  <a href="/library/products/pdfs/quarterly-price-list-april--june-2026.pdf?rev=1">PDF</a>
+	  <a href="/library/products/other-documents/quarterly-price-list-april--june-2026.xlsx?rev=abc&amp;hash=XYZ">XLSX</a>
+	  <a href="/library/products/other-documents/monthly-specials-june-2026.xlsx">specials</a>
+	</body></html>`
+	var gotXLSX string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case strings.Contains(r.URL.Path, "product-downloads"):
+			_, _ = w.Write([]byte(page))
+		case strings.HasSuffix(r.URL.Path, ".xlsx"):
+			gotXLSX = r.URL.Path
+			_, _ = w.Write([]byte("PK\x03\x04 fake xlsx bytes"))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer srv.Close()
+
+	data, src, err := vabc.FetchLatestPriceList(context.Background(),
+		vabc.WithBaseURL(srv.URL), vabc.WithMinInterval(0),
+		vabc.WithStatePath(filepath.Join(t.TempDir(), "t.json")))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(src, "quarterly-price-list-april--june-2026.xlsx") {
+		t.Fatalf("picked wrong link: %s", src)
+	}
+	if !strings.HasSuffix(gotXLSX, "quarterly-price-list-april--june-2026.xlsx") {
+		t.Fatalf("downloaded wrong file: %s", gotXLSX)
+	}
+	if !strings.HasPrefix(string(data), "PK") {
+		t.Fatalf("did not return xlsx bytes: %q", string(data))
+	}
+}

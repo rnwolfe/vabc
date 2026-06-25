@@ -255,17 +255,34 @@ func emitError(rt *Runtime, err error) int {
 	return ce.Exit
 }
 
-// handleParseError reports usage errors and offers a "did you mean" suggestion.
+// handleParseError reports usage errors and offers a "did you mean" suggestion —
+// but only for an unknown first command token, never for a valid command that
+// merely had a flag/argument problem (e.g. a missing required flag).
 func handleParseError(stderr io.Writer, args []string, err error) int {
 	fmt.Fprintf(stderr, "error: %s\n", err)
-	for _, a := range args {
-		if strings.HasPrefix(a, "-") {
-			continue
+	// kong already emits its own "did you mean" for unknown commands; only add ours
+	// as a fallback, and never for a valid command that just had a flag/arg problem.
+	if !strings.Contains(err.Error(), "did you mean") {
+		for _, a := range args {
+			if strings.HasPrefix(a, "-") {
+				continue
+			}
+			if !isKnownCommand(a) {
+				if s, ok := closest(a, topCommands); ok {
+					fmt.Fprintf(stderr, "  did you mean %q?\n", s)
+				}
+			}
+			break
 		}
-		if s, ok := closest(a, topCommands); ok {
-			fmt.Fprintf(stderr, "  did you mean %q?\n", s)
-		}
-		break
 	}
 	return errs.ExitUsage
+}
+
+func isKnownCommand(a string) bool {
+	for _, c := range topCommands {
+		if c == a {
+			return true
+		}
+	}
+	return false
 }

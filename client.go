@@ -155,22 +155,70 @@ func (c *httpClient) getJSON(ctx context.Context, url string, out any) error {
 }
 
 func (c *httpClient) do(ctx context.Context, url string) ([]byte, int, error) {
+	return c.doAccept(ctx, url, "application/json")
+}
+
+func (c *httpClient) doAccept(ctx context.Context, url, accept string) ([]byte, int, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, 0, err
 	}
-	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Accept", accept)
 	req.Header.Set("User-Agent", c.userAgent)
 	resp, err := c.http.Do(req)
 	if err != nil {
 		return nil, 0, err
 	}
 	defer resp.Body.Close()
-	body, err := io.ReadAll(io.LimitReader(resp.Body, 8<<20))
+	body, err := io.ReadAll(io.LimitReader(resp.Body, 32<<20))
 	if err != nil {
 		return nil, resp.StatusCode, err
 	}
 	return body, resp.StatusCode, nil
+}
+
+// fetchBytes is a throttled, retried GET that returns the raw body on 200 and
+// classifies failures like getJSON (for non-JSON resources: the downloads page, XLSX).
+func (c *httpClient) fetchBytes(ctx context.Context, url, accept string) ([]byte, error) {
+	var lastErr error
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		if err := c.throttle.acquire(ctx); err != nil {
+			return nil, err
+		}
+		body, status, err := c.doAccept(ctx, url, accept)
+		if err != nil {
+			lastErr = retryable(0, "request failed: "+err.Error(), err)
+			if attempt < maxRetries {
+				if werr := sleepCtx(ctx, backoff(attempt)); werr != nil {
+					return nil, werr
+				}
+				continue
+			}
+			return nil, lastErr
+		}
+		switch {
+		case status == http.StatusOK:
+			return body, nil
+		case status == http.StatusNotFound:
+			return nil, notFound(status, "not found: "+url)
+		case status == http.StatusTooManyRequests || isChallenge(status, body):
+			ra := retryAfterFrom(body)
+			c.throttle.observe(ra)
+			return nil, rateLimited(status, "blocked or rate-limited by the upstream", ra)
+		case status >= 500:
+			lastErr = retryable(status, "upstream error", nil)
+			if attempt < maxRetries {
+				if werr := sleepCtx(ctx, backoff(attempt)); werr != nil {
+					return nil, werr
+				}
+				continue
+			}
+			return nil, lastErr
+		default:
+			return nil, retryable(status, fmt.Sprintf("unexpected status %d", status), nil)
+		}
+	}
+	return nil, lastErr
 }
 
 func backoff(attempt int) time.Duration {

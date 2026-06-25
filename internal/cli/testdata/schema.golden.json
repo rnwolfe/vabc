@@ -197,7 +197,7 @@
           {
             "flags": [
               {
-                "help": "Path to a downloaded ABC quarterly price-list .xlsx.",
+                "help": "Use a local ABC price-list .xlsx instead of auto-downloading the latest.",
                 "name": "from-xlsx"
               },
               {

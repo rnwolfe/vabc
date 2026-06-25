@@ -10,8 +10,9 @@ func closest(word string, candidates []string) (string, bool) {
 			bestDist, best = d, c
 		}
 	}
-	// Only suggest when reasonably close (threshold scales loosely with length).
-	if best != "" && bestDist <= 3 && bestDist < len(best) {
+	// Only suggest when reasonably close, and never echo the exact word typed
+	// (bestDist > 0). Threshold scales loosely with length.
+	if best != "" && bestDist > 0 && bestDist <= 3 && bestDist < len(best) {
 		return best, true
 	}
 	return "", false
