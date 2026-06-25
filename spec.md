@@ -35,10 +35,10 @@ tracking allocated/limited drops, but the tool covers the full catalog: spirits,
     `productCode`, confirmed: Planteray Original Dark → `042395`), `productz32xlabelz32xname`,
     `hierarchyz32xcategory/type`, `z95xproductz32xsiz122xes`, `z95xproductz32xpricez32xsort`,
     `proofmin`, `z95xproductz32xlimitedz32xavailability`, `clickUri`.
-    → **Implemented:** `product search`/`get` query Coveo LIVE by default (full coverage, current).
-    The downloadable **quarterly price-list XLSX** still feeds an **embedded snapshot** (~4,900
-    products) used as the `--offline` path and the automatic fallback when the live catalog is
-    unreachable. (Original snapshot-only plan retained as the offline tier.)
+    → **Implemented (live-only):** `product search`/`get` query Coveo LIVE. The earlier offline
+    snapshot/XLSX-harvest/`catalog` subsystem was **removed** — it was incomplete (missed
+    online-only SKUs like OFTD) and bloated the binary (~4 MB, incl. the `excelize` dep). The
+    catalog has no offline tier; everything is live.
 - **Rate limits / pagination**: No documented rate limit on `/webapi/*`; **no pagination** (one
   product/store per call → per-pair fan-out). **The endpoints are undocumented and CF-exempt only
   because the site's own JS calls them** → treat as a courtesy surface. Because an agent spawns a
@@ -79,20 +79,16 @@ tracking allocated/limited drops, but the tool covers the full catalog: spirits,
   plain HTTP GET → JSON), so distribution decides — Go gives the best single-binary + lowest cold
   start for an agent hot-loop, and the only working prior art is already Go.
 - **Framework**: **kong**
-- **SDK/library used**: direct HTTP (`net/http` + `encoding/json`) for the whole live surface. XLSX
-  parsing (`excelize`) for catalog generation only, confined to `internal/harvest` so it never reaches
-  library importers. **No headless browser anywhere.**
+- **SDK/library used**: direct HTTP (`net/http` + `encoding/json`) for the whole surface — product
+  search (Coveo), inventory, stores, lottery. **No heavy deps, no headless browser.**
 - **Blueprint**: references/research/blueprint-go.md
 - **Language-specific gotchas to honor**:
-  - **Catalog is a bundled snapshot; importers must never inherit catalog-gen deps.** Ship the
-    snapshot embedded via `go:embed` so `product search`/`product get` and all inventory commands work
-    offline with zero network-to-CF. Catalog generation parses ABC's quarterly XLSX and lives under
-    `internal/harvest` (unimportable externally) so the public library's dependency graph stays tiny —
-    just HTTP + JSON (see **Architecture & packaging**). No headless browser is used anywhere.
+  - Keep the public library tiny: HTTP + JSON only. The ZIP/address geocoder + embedded ZCTA
+    centroid table live under `internal/geocode` so importers never inherit them.
   - Pin a thin `webapi` client to the verified contract; tolerate the plural-but-singular param quirk
     and per-pair fan-out (no comma lists).
   - `productCode` is **NOT validated server-side** — a bogus code returns `200 {quantity:0}`. So
-    inventory cannot confirm a SKU exists; existence checks MUST go through the catalog snapshot.
+    inventory cannot confirm a SKU exists; existence is confirmed via Coveo `product search`/`get`.
   - `storeNumber` IS validated (bad number → `400 "No Store exists…"`) — map to exit 5.
   - The inventory `storeId` (small int) = the ABC store number embedded in ArcGIS `LandmkName`
     ("ABC Store 088" → 88), **not** the long `VAPID`. Join on the store-number suffix.
@@ -104,56 +100,37 @@ kong).
 
 **Module layout** (`github.com/rnwolfe/vabc`):
 ```
-github.com/rnwolfe/vabc                  (root = the public library; tiny deps)
-├── client.go            // Client struct + functional options; throttling http.RoundTripper
+github.com/rnwolfe/vabc                  (root = the public library; tiny deps — HTTP+JSON only)
+├── client.go            // Client struct + functional options; persistent throttle/circuit-breaker
+├── coveo.go             // SearchProducts(ctx, query, limit) — live web-catalog search
 ├── inventory.go         // StoreNearby(ctx, store, code), MyStore(...), Warehouse(ctx, code)
-├── stores.go            // Stores(ctx) ArcGIS locator; StoreNear(ctx, loc)
+├── stores.go            // Stores(ctx) ArcGIS locator; StoreNear(ctx, lat, lng, limit)
 ├── lottery.go           // LimitedAvailability(ctx, code)
-├── types.go             // Product, Store, Inventory, NearbyStore, LotteryEvent, Envelope
-├── catalog/             // catalog as a SWAPPABLE provider, not a hardcoded file
-│   ├── catalog.go       //   Catalog interface { Search(q, opts) ; Get(code) } + errors
-│   ├── embedded.go      //   //go:embed data/catalog.json  → default provider
-│   └── data/catalog.json//   committed snapshot = source of truth (diffable, CI-refreshed)
-├── internal/harvest/    // XLSX → catalog.json parser (excelize) — NOT part of the public API surface
-├── cmd/vabc/            // thin kong CLI: parse → call library → format. No business logic.
-└── cmd/vabc-catalog-gen/// generator binary: internal/harvest over a quarterly XLSX → catalog.json
+├── throttle.go errors.go types.go
+├── internal/geocode/    // ZIP/address → coords (embedded ZCTA centroids + Census) — not public
+├── internal/cli/        // thin kong CLI: parse → call library → format. No business logic.
+└── cmd/vabc/            // main() = os.Exit(cli.Run(...)) only
 ```
 
 **Decoupling rules:**
-- **Public interfaces, not concretes.** `Client` and `Catalog` are interfaces; the CLI and any third
-  party depend on those, so the HTTP/embedded implementations can be swapped or mocked.
-- **Politeness lives in the library, not the CLI.** The persistent cross-process throttle/backoff is a
-  composable `http.RoundTripper` on the `Client`, so *every* importer is a polite citizen of the
-  undocumented WAF-fronted API for free.
-- **Catalog-gen is quarantined.** XLSX parsing (`excelize`) is reachable only via `internal/harvest`
-  (Go forbids external imports of `internal/`), used by both `cmd/vabc-catalog-gen` and the CLI's
-  `catalog refresh` command. `go get github.com/rnwolfe/vabc` pulls a minimal HTTP+JSON client only —
-  no excelize, no browser.
-- **Stable envelope shared by both consumers.** `types.Envelope{ schemaVersion, scope?, data,
-  nextCursor? }` is defined in the library; the CLI just serializes it. One schema, no drift.
+- **Public interface, not concretes.** `Client` is an interface; the CLI and any third party depend
+  on it, so the HTTP implementation can be swapped or mocked.
+- **Politeness lives in the library, not the CLI.** The persistent cross-process throttle/circuit-
+  breaker is part of the `Client`, so *every* importer is a polite citizen of the undocumented API.
+- **Tiny import graph.** `go get github.com/rnwolfe/vabc` pulls an HTTP+JSON client only — no
+  embedded data, no excelize, no browser. The geocoder + ZCTA table are quarantined in
+  `internal/geocode`.
 
-### Catalog data model & refresh (resolves the "search has no live API" gap)
-- **Source of truth**: committed `catalog/data/catalog.json` (keyed by 6-digit `productCode`),
-  **embedded into every release binary** via `go:embed` → `product search`/`get` are offline,
-  browser-free, deterministic.
-- **Repo refresh (the CLI cycle)**: ABC publishes a **quarterly XLSX price list**. The maintainer
-  downloads it (a once-a-quarter manual click — the file URL is CF-gated so it isn't auto-fetched),
-  runs `cmd/vabc-catalog-gen --from-xlsx <file>` to regenerate `catalog.json`, and commits → the next
-  release ships current data. A scheduled GitHub Action can *check* for a newer quarter's file and
-  open a reminder issue, but does not fetch through Cloudflare. Worst-case staleness = release cadence
-  (acceptable: the catalog itself only changes quarterly).
-- **Runtime refresh (between releases)**: `vabc catalog refresh --from-xlsx <file>` writes a fresh
-  snapshot into the XDG cache from a price list you already downloaded; the `Catalog` provider resolves
-  **local cache (if present & newer) → embedded snapshot**, so an agent never blocks on the
-  network/browser for search.
-- Every response carries `scope` (e.g. `"catalog snapshot 2026-06-01; live inventory"`) so a caller
-  never mistakes cached catalog for live stock.
+### Product catalog (live, no offline tier)
+`product search`/`get` query the site's **Coveo index** (`POST /coveo/rest/search/v2`, anonymous) —
+the full web catalog, current, including online-only SKUs. Coveo results carry the 6-digit inventory
+`productCode`, so a search hit feeds straight into inventory. There is **no embedded snapshot and no
+`catalog` command** (the original XLSX-snapshot design was removed as incomplete + bloating).
 
 ## Auth
-- **Model**: **None.** All four data surfaces (`/webapi/*` inventory + ArcGIS stores) are fully
-  **public, unauthenticated, and Cloudflare-exempt**. No API key, bearer, cookie/session, or CSRF.
-- **Provider constraints**: n/a — nothing to authenticate. (The CF challenge only fronts HTML/static
-  paths, which the runtime never touches; only `catalog refresh` deals with it, browser-side.)
+- **Model**: **None.** All surfaces (`/webapi/*` inventory, ArcGIS stores, the Coveo search proxy)
+  are **public and unauthenticated**. No API key, bearer, cookie/session, or CSRF.
+- **Provider constraints**: n/a — nothing to authenticate.
 - **Feasible path to usability (end-to-end)**: trivially headless — the tool works on first run with
   no setup. No tokens, no onboarding, no secret storage required.
 - **Secret storage**: n/a (no secrets).
@@ -164,56 +141,49 @@ github.com/rnwolfe/vabc                  (root = the public library; tiny deps)
 ## Command surface (noun-verb)
 | Command | Read/Mutation | Description | Key output fields |
 |---|---|---|---|
-| `product search <query>` | read | Keyword search over the cached catalog snapshot. `--allocated` filter, `--type`, `--limit`, `--select`. | `productCode, name, category, type, proof, size, retailPrice, discountPrice, allocated, onlineOrderable, new, upc, url` |
-| `product get <productCode>` | read | Full catalog record for one 6-digit SKU. | (all catalog fields above) |
-| `inventory check <productCode>` | read | Live per-store availability + nearby stores ranked by distance. `--store <n>` (anchor) **or** `--near <zip>` (resolve nearest store via ArcGIS, then `storeNearby`). `--limit`/`--radius` bound the nearby list. | `productCode, store{storeId,quantity,address,city,zip,distance,lat,lng,phone,hours,url}, nearbyStores[]` |
+| `product search <query>` | read | Live keyword search over the Coveo web catalog. `--allocated` filter, `--type`, `--limit`, `--select`. | `productCode, name, category, type, proof, size, retailPrice, allocated, onlineOrderable, new, url` |
+| `product get <productCode>` | read | Live lookup of one 6-digit SKU (via Coveo). | (all product fields above) |
+| `inventory check <productCode>` | read | Live per-store availability + nearby stores ranked by distance. `--store <n>` (anchor) **or** `--near <ZIP\|address\|lat,lng>` (geocode → nearest store, then `storeNearby`). | `productCode, store{storeNumber,quantity,address,city,zip,distance,lat,lng,phone,hours,url}, nearbyStores[]` |
 | `inventory warehouse <productCode>` | read | Statewide central-warehouse stock. | `productCode, warehouseInventory` |
 | `lottery check <productCode>` | read | Active limited-availability / allocated event links for a SKU. | `productCode, allocated, active, eventLinks[]` (fenced untrusted) |
 | `store list` | read | All ~394 stores from the ArcGIS dataset. `--limit`, `--select`. | `storeNumber, name, address, city, state, zip, phone, lat, lng, url` |
 | `store get <storeNumber>` | read | One store's details. | (store fields above) |
-| `store near <zip\|lat,lng>` | read | Nearest stores to a location, by distance. `--limit`, `--radius`. | `storeNumber, name, address, distance, lat, lng, …` |
-| `catalog status` | read | Snapshot version, build date, product count, staleness. | `schemaVersion, snapshotDate, productCount, stale` |
-| `catalog refresh --from-xlsx <path>` | local maintenance | Rebuild the local catalog snapshot into XDG cache from a downloaded ABC quarterly price list (shares `internal/harvest`). Not a target mutation. | `snapshotDate, productCount, source` |
+| `store near <ZIP\|address\|lat,lng>` | read | Nearest stores to a geocoded location, by distance. `--limit`. | `storeNumber, name, address, distance, lat, lng, …` |
 | `auth status` | read | Reports no-auth (contract uniformity). | `authRequired:false, ok` |
-| `doctor` | read | Probe `/webapi/*` + ArcGIS reachability and catalog freshness; actionable diagnostics. | `checks[]{name,ok,detail}` |
+| `doctor [--online]` | read | Offline summary; `--online` probes inventory/ArcGIS/Coveo reachability. | `checks[]{name,ok,detail}` |
 
 No state-changing operations against the target exist anywhere in scope (VA ABC exposes no
 cart/order API we wrap) → **the tool is wholly read-only**. `--allow-mutations` is present (scaffold)
-but gates nothing; `catalog refresh` writes only the local snapshot cache.
+but gates nothing.
 
 ## Exit codes
-Base from contract §4, plus target-specific:
+Base from contract §4:
 ```
-0   ok                         5  not found (unknown 6-digit SKU in catalog; or 400 "No Store exists…")
-1   generic error              7  rate limited / WAF challenge hit on a normally-exempt endpoint
-2   usage/parse                8  retryable/transient (network, upstream 5xx, transient CF challenge)
+0   ok                         5  not found (unknown 6-digit SKU; or 400 "No Store exists…")
+1   generic error              7  rate limited / WAF challenge
+2   usage/parse                8  retryable/transient (network, upstream 5xx)
 3   empty results              10 config error
-                               11 CATALOG_UNAVAILABLE  [target-specific] — snapshot missing/unreadable; run `catalog refresh`
-                               14 CATALOG_STALE         [target-specific] — snapshot older than threshold (hard-fail only under --strict; otherwise warn on stderr)
 130 cancelled (SIGINT)
 ```
 Reserved but unused: `4 auth required` (no auth), `6 permission denied`, `12 mutation blocked` (no mutations).
 
 ## Output schema
-`schemaVersion: 1`. **Realized in scaffold:** reads emit the domain data *directly* (arrays for
-lists, objects for single records) so the token-economy flags (`--limit`, `--select`) operate
-naturally on the result; freshness/`scope` is surfaced on **stderr** (`scope: …` note) and in-band
-via `catalog status`, and `schemaVersion` is reported by `schema --json` + `catalog status`. The
-typed `vabc.Envelope{schemaVersion, scope?, data, nextCursor?}` is defined in the library for
-callers that want the full wrapper; cli-implement may promote list/object reads onto it if an
-in-band `scope` per response proves necessary. Field contracts (append-only):
+`schemaVersion: 1` (reported by `schema --json`). Reads emit the domain data *directly* (arrays for
+lists, objects for single records) so `--limit`/`--select` operate naturally; scope/context notes go
+to **stderr**. Field contracts (append-only):
 - **product**: `productCode` (string, 6-digit zero-padded), `name`, `category`, `type`, `proof`
-  (number|null), `size`, `retailPrice` (number|null), `discountPrice` (number|null), `allocated`
-  (bool), `onlineOrderable` (bool), `new` (bool), `upc` (string[]), `url`.
-- **inventory check**: `productCode`, `store` { `storeId` (int), `quantity` (int), `distance` (number,
-  miles), `address`, `address1`, `address2`, `city`, `state`, `zip`, `lat`, `lng`, `phone`, `hours`,
-  `shoppingCenter`, `url` }, `nearbyStores` (same store shape, ranked by `distance`).
+  (number|null), `size`, `retailPrice` (number|null), `allocated` (bool), `onlineOrderable` (bool),
+  `new` (bool), `url`.
+- **inventory check**: `productCode`, `store` { `storeNumber` (int), `quantity` (int), `distance`
+  (number, miles, pointer — present incl. 0.0 when computed), `address`, `address1`, `address2`,
+  `city`, `state`, `zip`, `lat`, `lng`, `phone`, `hours`, `shoppingCenter`, `url` }, `nearbyStores`
+  (same store shape, ranked by `distance`).
 - **inventory warehouse**: `productCode`, `warehouseInventory` (int).
-- **lottery check**: `productCode`, `allocated` (bool, from catalog), `active` (bool), `eventLinks`
-  (array of `{title,url}` — **fenced untrusted**).
+- **lottery check**: `productCode`, `allocated` (bool, from the product's web-catalog record),
+  `active` (bool), `eventLinks` (array of `{title,url}` — **fenced untrusted**).
 - **store**: `storeNumber` (int), `name`, `address`, `city`, `state`, `zip`, `phone`, `lat`, `lng`,
   `url`; `distance` added on `store near`.
-- **catalog status / doctor**: as in the table.
+- **doctor**: `checks[]{name,ok,detail}`.
 
 ## Universal contract surface (provided by scaffold — confirm no conflicts)
 `--format json|plain|tsv` · `--allow-mutations` (no-op here — no target mutations) · `--dry-run` ·
@@ -226,9 +196,9 @@ gated.
 - **Targets**: `go install` · Homebrew tap (`brew install rnwolfe/tap/vabc`) · GoReleaser release
   binaries (darwin/linux/windows × amd64/arm64), checksummed.
 - **Trial path**: `brew install` or a one-line install script downloading the prebuilt binary; works
-  immediately (no auth, bundled catalog snapshot).
-- **Agent hot-loop path**: prebuilt static Go binary — lowest cold start, embedded SKILL.md + catalog
-  snapshot, no network needed for catalog/help.
+  immediately (no auth, no setup).
+- **Agent hot-loop path**: prebuilt static Go binary — lowest cold start, embedded SKILL.md, no
+  setup. (All product/inventory data is live.)
 
 ## Publish
 - **Flag**: **full** (portfolio-bound — operator confirmed).

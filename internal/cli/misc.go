@@ -3,7 +3,6 @@ package cli
 import (
 	"context"
 	"errors"
-	"strconv"
 	"time"
 
 	"github.com/alecthomas/kong"
@@ -42,23 +41,9 @@ type DoctorCmd struct {
 }
 
 func (c *DoctorCmd) Run(rt *Runtime) error {
-	checks := []map[string]any{}
-
-	if rt.Catalog != nil {
-		checks = append(checks, map[string]any{
-			"name": "catalog", "ok": true,
-			"detail": "snapshot " + rt.Catalog.SnapshotDate() + " (" + rt.Catalog.Source() + "), " +
-				strconv.Itoa(rt.Catalog.Count()) + " products",
-		})
-	} else {
-		checks = append(checks, map[string]any{
-			"name": "catalog", "ok": false,
-			"detail": "no catalog snapshot loaded; run `vabc catalog refresh --from-xlsx <file>`",
-		})
+	checks := []map[string]any{
+		{"name": "auth", "ok": true, "detail": "no authentication required"},
 	}
-	checks = append(checks,
-		map[string]any{"name": "auth", "ok": true, "detail": "no authentication required"},
-	)
 
 	if c.Online {
 		ctx, cancel := context.WithTimeout(rt.Ctx, 12*time.Second)
@@ -67,10 +52,13 @@ func (c *DoctorCmd) Run(rt *Runtime) error {
 		checks = append(checks, probe("inventory_endpoint", vabc.DefaultBaseURL, invErr))
 		_, stErr := rt.Client.Stores(ctx)
 		checks = append(checks, probe("stores_endpoint", "ArcGIS FeatureServer", stErr))
+		_, searchErr := rt.Client.SearchProducts(ctx, "bourbon", 1)
+		checks = append(checks, probe("product_search", "Coveo web catalog", searchErr))
 	} else {
 		checks = append(checks,
 			map[string]any{"name": "inventory_endpoint", "ok": true, "detail": "configured: " + vabc.DefaultBaseURL + " (pass --online to probe)"},
 			map[string]any{"name": "stores_endpoint", "ok": true, "detail": "configured: ArcGIS FeatureServer (pass --online to probe)"},
+			map[string]any{"name": "product_search", "ok": true, "detail": "configured: Coveo web catalog (pass --online to probe)"},
 		)
 	}
 

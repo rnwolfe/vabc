@@ -27,10 +27,15 @@ func (c *LotteryCheckCmd) Run(rt *Runtime) error {
 			}
 		}
 	}
-	// Allocated comes from the catalog flag, not the live hook.
-	if rt.Catalog != nil {
-		if p, ok, _ := rt.Catalog.Get(pad6(c.Code)); ok {
-			res.Allocated = p.Allocated
+	// The allocated flag comes from the product's web-catalog record (the live hook
+	// only carries active event links). Best-effort; ignore lookup failures.
+	code := pad6(c.Code)
+	if products, perr := rt.Client.SearchProducts(rt.Ctx, code, 10); perr == nil {
+		for _, p := range products {
+			if p.ProductCode == code {
+				res.Allocated = p.Allocated
+				break
+			}
 		}
 	}
 	rt.Out.Info("scope: live limited-availability hook for product %s", c.Code)

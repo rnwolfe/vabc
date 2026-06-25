@@ -14,13 +14,9 @@ const (
 	ExitRate            = 7
 	ExitRetry           = 8
 	ExitConfig          = 10
-	// ExitCatalogUnavailable: the catalog snapshot is missing or unreadable (vabc-specific).
-	ExitCatalogUnavailable = 11
-	ExitMutationBlocked    = 12
-	ExitInputRequired      = 13
-	// ExitCatalogStale: the catalog snapshot is older than the freshness threshold (vabc-specific).
-	ExitCatalogStale = 14
-	ExitCancelled    = 130
+	ExitMutationBlocked = 12
+	ExitInputRequired   = 13
+	ExitCancelled       = 130
 )
 
 // Table returns the exit-code table for the `schema` command.
@@ -35,12 +31,10 @@ func Table() map[string]int {
 		"permission":       ExitPerm,
 		"rate_limited":     ExitRate,
 		"retryable":        ExitRetry,
-		"config_error":        ExitConfig,
-		"catalog_unavailable": ExitCatalogUnavailable,
-		"mutation_blocked":    ExitMutationBlocked,
-		"input_required":      ExitInputRequired,
-		"catalog_stale":       ExitCatalogStale,
-		"cancelled":           ExitCancelled,
+		"config_error":     ExitConfig,
+		"mutation_blocked": ExitMutationBlocked,
+		"input_required":   ExitInputRequired,
+		"cancelled":        ExitCancelled,
 	}
 }
 
@@ -77,11 +71,4 @@ func NotFound(kind, id string) *CLIError {
 func InputRequired(what string) *CLIError {
 	return New(ExitInputRequired, "INPUT_REQUIRED", what+" is required",
 		"pass it as a flag/argument (running with --no-input, so prompts are disabled)")
-}
-
-// CatalogUnavailable is returned when no catalog snapshot could be loaded.
-func CatalogUnavailable() *CLIError {
-	return New(ExitCatalogUnavailable, "CATALOG_UNAVAILABLE",
-		"no product catalog snapshot is available",
-		"run: vabc catalog refresh --from-xlsx <price-list.xlsx>")
 }

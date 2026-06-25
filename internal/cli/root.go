@@ -10,7 +10,6 @@ import (
 	"io"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -18,7 +17,6 @@ import (
 	"github.com/alecthomas/kong"
 
 	"github.com/rnwolfe/vabc"
-	"github.com/rnwolfe/vabc/catalog"
 	"github.com/rnwolfe/vabc/internal/errs"
 	"github.com/rnwolfe/vabc/internal/output"
 )
@@ -54,11 +52,10 @@ type CLI struct {
 	MaxWait time.Duration `default:"30s" help:"Maximum time to wait when --wait is set."`
 
 	// Commands
-	Product   ProductCmd   `cmd:"" help:"Search and look up products (catalog snapshot)."`
+	Product   ProductCmd   `cmd:"" help:"Search and look up products (live web catalog)."`
 	Inventory InventoryCmd `cmd:"" help:"Check live per-store and warehouse inventory."`
 	Store     StoreCmd     `cmd:"" help:"List and locate Virginia ABC stores."`
 	Lottery   LotteryCmd   `cmd:"" help:"Check limited-availability / allocated releases."`
-	Catalog   CatalogCmd   `cmd:"" help:"Inspect or refresh the local product catalog snapshot."`
 	Auth      AuthCmd      `cmd:"" help:"Authentication status (none required for Virginia ABC)."`
 	Doctor    DoctorCmd    `cmd:"" help:"Diagnose setup and report fixes."`
 	Schema    SchemaCmd    `cmd:"" help:"Print the machine-readable command schema (JSON)."`
@@ -68,18 +65,17 @@ type CLI struct {
 
 // topCommands lists the top-level command names for "did you mean" suggestions.
 var topCommands = []string{
-	"product", "inventory", "store", "lottery", "catalog",
+	"product", "inventory", "store", "lottery",
 	"auth", "doctor", "schema", "agent", "version",
 }
 
 // Runtime is the per-invocation context bound into every command's Run method.
 type Runtime struct {
-	Cfg     *CLI
-	Out     *output.Writer
-	Client  vabc.Client     // live Virginia ABC API
-	Catalog catalog.Catalog // product snapshot (may be nil if it failed to load)
-	Stdin   io.Reader
-	Ctx     context.Context // cancelled on SIGINT/SIGTERM
+	Cfg    *CLI
+	Out    *output.Writer
+	Client vabc.Client // live Virginia ABC API
+	Stdin  io.Reader
+	Ctx    context.Context // cancelled on SIGINT/SIGTERM
 }
 
 // Guard enforces the read-only-by-default mutation gate (contract §2). vabc exposes
@@ -147,11 +143,10 @@ func newRuntime(cfg *CLI, stdin io.Reader, stdout, stderr io.Writer) *Runtime {
 		Format: format, Color: color, Limit: cfg.Limit, Select: sel,
 	}
 	return &Runtime{
-		Cfg:     cfg,
-		Out:     w,
-		Client:  vabc.NewClient(clientOptions(cfg)...),
-		Catalog: loadCatalog(w),
-		Stdin:   stdin,
+		Cfg:    cfg,
+		Out:    w,
+		Client: vabc.NewClient(clientOptions(cfg)...),
+		Stdin:  stdin,
 	}
 }
 
@@ -172,43 +167,6 @@ func clientOptions(cfg *CLI) []vabc.Option {
 		}
 	}
 	return opts
-}
-
-// loadCatalog resolves the catalog snapshot: a fresher local cache (if present)
-// overrides the embedded seed. Returns nil only if both fail (commands then emit
-// a structured CATALOG_UNAVAILABLE error).
-func loadCatalog(w *output.Writer) catalog.Catalog {
-	if p := cachePath(); p != "" {
-		if c, err := catalog.Load(p); err == nil {
-			return c
-		}
-	}
-	c, err := catalog.Default()
-	if err != nil {
-		w.Info("warning: embedded catalog failed to load: %v", err)
-		return nil
-	}
-	return c
-}
-
-// cachePath returns the runtime-refreshed catalog location, or "" if none.
-// Override with VABC_CATALOG; otherwise $XDG_CACHE_HOME/vabc/catalog.json.
-func cachePath() string {
-	if p := os.Getenv("VABC_CATALOG"); p != "" {
-		if _, err := os.Stat(p); err == nil {
-			return p
-		}
-		return ""
-	}
-	dir, err := os.UserCacheDir()
-	if err != nil {
-		return ""
-	}
-	p := filepath.Join(dir, "vabc", "catalog.json")
-	if _, err := os.Stat(p); err != nil {
-		return ""
-	}
-	return p
 }
 
 func isTTY(w io.Writer) bool {

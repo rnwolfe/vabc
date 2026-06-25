@@ -69,7 +69,7 @@
     "name": "vabc",
     "subcommands": [
       {
-        "help": "Search and look up products (catalog snapshot).",
+        "help": "Search and look up products (live web catalog).",
         "name": "product",
         "subcommands": [
           {
@@ -87,10 +87,6 @@
               {
                 "help": "Only allocated / limited-availability products.",
                 "name": "allocated"
-              },
-              {
-                "help": "Search the embedded snapshot only (no network).",
-                "name": "offline"
               }
             ],
             "help": "Search products by keyword (live web catalog).",
@@ -101,12 +97,6 @@
               {
                 "help": "6-digit product code (e.g. 010807).",
                 "name": "code"
-              }
-            ],
-            "flags": [
-              {
-                "help": "Look up in the embedded snapshot only (no network).",
-                "name": "offline"
               }
             ],
             "help": "Get one product by 6-digit product code.",
@@ -197,30 +187,6 @@
         ]
       },
       {
-        "help": "Inspect or refresh the local product catalog snapshot.",
-        "name": "catalog",
-        "subcommands": [
-          {
-            "help": "Show catalog snapshot freshness and source.",
-            "name": "status"
-          },
-          {
-            "flags": [
-              {
-                "help": "Use a local ABC price-list .xlsx instead of auto-downloading the latest.",
-                "name": "from-xlsx"
-              },
-              {
-                "help": "Override the snapshot output path (default: XDG cache).",
-                "name": "out"
-              }
-            ],
-            "help": "Rebuild the local snapshot from a downloaded ABC price list.",
-            "name": "refresh"
-          }
-        ]
-      },
-      {
         "help": "Authentication status (none required for Virginia ABC).",
         "name": "auth",
         "subcommands": [
@@ -257,8 +223,6 @@
   "exit_codes": {
     "auth_required": 4,
     "cancelled": 130,
-    "catalog_stale": 14,
-    "catalog_unavailable": 11,
     "config_error": 10,
     "empty_results": 3,
     "generic_error": 1,

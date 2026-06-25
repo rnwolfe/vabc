@@ -18,22 +18,18 @@ limited-availability ("lottery"/allocated) releases. **No authentication is requ
 ## Output & token economy
 - `--json` (or `--format json|plain|tsv`) — JSON to stdout; human/progress notes to stderr.
 - `--limit N` (default 50), `--select a,b.c` dot-path projection on list/object output.
-- Freshness/scope notes are printed to **stderr** (e.g. "scope: catalog snapshot 2026-06-24").
+- Scope/context notes are printed to **stderr** (e.g. "scope: live inventory for product …").
 
-## Catalog vs live
-- **Product search/lookup** query the **live web catalog** (the site's Coveo index) by default —
-  full coverage, current, and including new/online-only SKUs absent from the downloadable price
-  list. Results carry the inventory product code. Pass `--offline` to search the embedded
-  snapshot instead (no network); the snapshot also serves as an automatic fallback when the live
-  catalog is unreachable. `vabc catalog refresh` rebuilds the offline snapshot from the quarterly
-  price list; `vabc catalog status` shows its date.
-- **Inventory, stores, lottery** are *live* HTTP reads.
+## Notes
+- **Everything is live.** `product search`/`get` query the site's Coveo web catalog (full
+  coverage, current; includes new/online-only SKUs). Results carry the 6-digit inventory product
+  code, so a search hit feeds straight into `inventory check`.
 - **Locations** (`--near`, `store near`) accept a 5-digit ZIP (offline centroid), a street
   address (geocoded), or `lat,lng`. Distances are measured from that point.
 
 ## Commands
 ```
-vabc product search <query> [--type T] [--allocated]   # search catalog snapshot
+vabc product search <query> [--type T] [--allocated]   # live web-catalog search
 vabc product get <productCode>                          # one product (6-digit code, e.g. 010807)
 vabc inventory check <code> --store <n>                 # live availability + nearby stores
 vabc inventory check <code> --near 22182|"123 Main St, Vienna VA"|"38.91,-77.23"  # nearest store, then check
@@ -42,8 +38,6 @@ vabc store list                                         # all stores
 vabc store get <storeNumber>                            # one store
 vabc store near 22182|"123 Main St, Richmond VA"|"38.91,-77.23"  # nearest stores (ZIP / address / lat,lng)
 vabc lottery check <code>                               # limited-availability events
-vabc catalog status                                     # snapshot date / count / staleness
-vabc catalog refresh [--from-xlsx <file>]               # auto-download the latest price list (or use a local file)
 vabc auth status                                        # always: no auth required
 vabc doctor [--online]                                  # diagnose setup (--online probes endpoints)
 vabc schema --json                                      # machine-readable command tree + exit codes
@@ -64,8 +58,8 @@ out. Never circumvent a block — treat a persistent one as a stop signal.
 
 ## Exit codes
 `0` ok · `1` generic · `2` usage · `3` empty · `5` not found (unknown code / store) ·
-`7` rate limited / WAF · `8` retryable/transient · `10` config · `11` catalog unavailable ·
-`13` input required (`--no-input`) · `14` catalog stale · `130` cancelled.
+`7` rate limited / WAF · `8` retryable/transient · `10` config ·
+`13` input required (`--no-input`) · `130` cancelled.
 
 Errors are JSON on stderr under `--json`: `{ "error", "code", "remediation" }`.
 

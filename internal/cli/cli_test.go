@@ -19,18 +19,58 @@ func run(t *testing.T, args ...string) (string, string, int) {
 func setup(t *testing.T) {
 	t.Helper()
 	t.Setenv("NO_COLOR", "1")
-	// Ensure tests never pick up a developer's cached catalog; rely on the embedded seed.
-	t.Setenv("VABC_CATALOG", "")
 	// Isolate throttle state and disable spacing so tests are fast and hermetic.
 	t.Setenv("VABC_STATE_DIR", t.TempDir())
 	t.Setenv("VABC_MIN_INTERVAL_MS", "0")
 }
 
-// --- catalog-backed reads (work offline via the embedded seed snapshot) ------
+// --- product reads (live Coveo web catalog, faked via httptest) --------------
+
+// coveoServer stands in for the site's Coveo product search. It matches a small
+// fixture by name-substring or exact code and returns Coveo-shaped JSON, so the
+// product commands can be exercised hermetically (no real network).
+func coveoServer(t *testing.T) {
+	t.Helper()
+	type fx struct{ sku, name, cat string }
+	fixtures := []fx{
+		{"010807", "Crown Royal Regal Apple", "Whisky"},
+		{"010646", "Crown Royal Blackberry", "Whisky"},
+		{"042395", "Planteray Original Dark Rum", "Rum"},
+	}
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !strings.Contains(r.URL.Path, "/coveo/rest/search") {
+			http.NotFound(w, r)
+			return
+		}
+		var body struct {
+			Q string `json:"q"`
+		}
+		_ = json.NewDecoder(r.Body).Decode(&body)
+		q := strings.ToLower(strings.TrimSpace(body.Q))
+		var results []map[string]any
+		for _, f := range fixtures {
+			if q == "" || strings.Contains(strings.ToLower(f.name), q) || f.sku == q {
+				results = append(results, map[string]any{
+					"clickUri": "https://x/products/" + f.sku,
+					"raw": map[string]any{
+						"z95xproductz32xskuz32xids": []string{f.sku},
+						"productz32xlabelz32xname":  f.name,
+						"hierarchyz32xcategory":     f.cat,
+					},
+				})
+			}
+		}
+		resp := map[string]any{"totalCount": len(results), "results": results}
+		_ = json.NewEncoder(w).Encode(resp)
+	}))
+	t.Cleanup(srv.Close)
+	t.Setenv("VABC_BASE_URL", srv.URL)
+}
 
 func TestProductSearchJSON(t *testing.T) {
 	setup(t)
-	out, _, code := run(t, "product", "search", "crown royal", "--offline", "--json")
+	coveoServer(t)
+	out, _, code := run(t, "product", "search", "crown", "--json")
 	if code != 0 {
 		t.Fatalf("exit = %d, want 0", code)
 	}
@@ -38,8 +78,8 @@ func TestProductSearchJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(out), &products); err != nil {
 		t.Fatalf("stdout not valid JSON array: %v\n%s", err, out)
 	}
-	if len(products) == 0 {
-		t.Fatalf("expected matches for 'crown royal', got none")
+	if len(products) != 2 {
+		t.Fatalf("expected 2 crown matches, got %d", len(products))
 	}
 	for _, p := range products {
 		if !strings.Contains(strings.ToLower(p["name"].(string)), "crown") {
@@ -50,7 +90,8 @@ func TestProductSearchJSON(t *testing.T) {
 
 func TestProductSearchEmptyIsArray(t *testing.T) {
 	setup(t)
-	out, _, code := run(t, "product", "search", "zzzznotathing", "--offline", "--json")
+	coveoServer(t)
+	out, _, code := run(t, "product", "search", "zzzznotathing", "--json")
 	if code != 0 {
 		t.Fatalf("exit = %d, want 0", code)
 	}
@@ -61,6 +102,7 @@ func TestProductSearchEmptyIsArray(t *testing.T) {
 
 func TestProductGetJSON(t *testing.T) {
 	setup(t)
+	coveoServer(t)
 	out, _, code := run(t, "product", "get", "010807", "--json")
 	if code != 0 {
 		t.Fatalf("exit = %d, want 0", code)
@@ -76,7 +118,8 @@ func TestProductGetJSON(t *testing.T) {
 
 func TestProductGetNotFound(t *testing.T) {
 	setup(t)
-	_, errb, code := run(t, "product", "get", "000000", "--offline", "--json")
+	coveoServer(t)
+	_, errb, code := run(t, "product", "get", "000000", "--json")
 	if code != 5 {
 		t.Fatalf("exit = %d, want 5 (not found)", code)
 	}
@@ -87,27 +130,13 @@ func TestProductGetNotFound(t *testing.T) {
 
 func TestSelectProjection(t *testing.T) {
 	setup(t)
-	out, _, code := run(t, "product", "search", "", "--offline", "--select", "productCode", "--json")
+	coveoServer(t)
+	out, _, code := run(t, "product", "search", "", "--select", "productCode", "--json")
 	if code != 0 {
 		t.Fatalf("exit = %d, want 0", code)
 	}
 	if strings.Contains(out, "\"name\"") {
 		t.Fatalf("--select should drop name field: %s", out)
-	}
-}
-
-func TestCatalogStatusJSON(t *testing.T) {
-	setup(t)
-	out, _, code := run(t, "catalog", "status", "--json")
-	if code != 0 {
-		t.Fatalf("exit = %d, want 0", code)
-	}
-	var s map[string]any
-	if err := json.Unmarshal([]byte(out), &s); err != nil {
-		t.Fatalf("not valid JSON: %v", err)
-	}
-	if _, ok := s["productCount"]; !ok {
-		t.Fatalf("status missing productCount: %s", out)
 	}
 }
 
@@ -130,8 +159,8 @@ func TestSchemaHasSafetyAndExitCodes(t *testing.T) {
 	if !ok {
 		t.Fatalf("schema missing exit_codes")
 	}
-	if _, ok := codes["catalog_unavailable"]; !ok {
-		t.Fatalf("exit_codes missing vabc-specific catalog_unavailable")
+	if _, ok := codes["mutation_blocked"]; !ok {
+		t.Fatalf("exit_codes missing mutation_blocked")
 	}
 }
 
@@ -164,7 +193,7 @@ func TestDidYouMean(t *testing.T) {
 func TestNoSuggestionForValidCommand(t *testing.T) {
 	setup(t)
 	// A valid command with a bad subcommand/flag must NOT suggest itself.
-	_, errb, code := run(t, "catalog", "nonsense")
+	_, errb, code := run(t, "product", "nonsense")
 	if code != 2 {
 		t.Fatalf("exit = %d, want 2", code)
 	}

@@ -251,50 +251,6 @@ func (c *httpClient) doAccept(ctx context.Context, url, accept string) ([]byte, 
 	return body, resp.StatusCode, nil
 }
 
-// fetchBytes is a throttled, retried GET that returns the raw body on 200 and
-// classifies failures like getJSON (for non-JSON resources: the downloads page, XLSX).
-func (c *httpClient) fetchBytes(ctx context.Context, url, accept string) ([]byte, error) {
-	var lastErr error
-	for attempt := 0; attempt <= maxRetries; attempt++ {
-		if err := c.throttle.acquire(ctx); err != nil {
-			return nil, err
-		}
-		body, status, err := c.doAccept(ctx, url, accept)
-		if err != nil {
-			lastErr = retryable(0, "request failed: "+err.Error(), err)
-			if attempt < maxRetries {
-				if werr := sleepCtx(ctx, backoff(attempt)); werr != nil {
-					return nil, werr
-				}
-				continue
-			}
-			return nil, lastErr
-		}
-		switch {
-		case status == http.StatusOK:
-			return body, nil
-		case status == http.StatusNotFound:
-			return nil, notFound(status, "not found: "+url)
-		case status == http.StatusTooManyRequests || isChallenge(status, body):
-			ra := retryAfterFrom(body)
-			c.throttle.observe(ra)
-			return nil, rateLimited(status, "blocked or rate-limited by the upstream", ra)
-		case status >= 500:
-			lastErr = retryable(status, "upstream error", nil)
-			if attempt < maxRetries {
-				if werr := sleepCtx(ctx, backoff(attempt)); werr != nil {
-					return nil, werr
-				}
-				continue
-			}
-			return nil, lastErr
-		default:
-			return nil, retryable(status, fmt.Sprintf("unexpected status %d", status), nil)
-		}
-	}
-	return nil, lastErr
-}
-
 func backoff(attempt int) time.Duration {
 	return time.Duration(200*(1<<attempt)) * time.Millisecond
 }
