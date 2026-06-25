@@ -41,12 +41,12 @@ func (c *StoreGetCmd) Run(rt *Runtime) error {
 }
 
 type StoreNearCmd struct {
-	Location string `arg:"" help:"A 5-digit ZIP or \"lat,lng\" to search near."`
+	Location string `arg:"" help:"A 5-digit ZIP, a street address, or \"lat,lng\" to search near."`
 }
 
 func (c *StoreNearCmd) Run(rt *Runtime) error {
 	ctx := rt.Ctx
-	lat, lng, err := resolveLocation(ctx, rt, c.Location)
+	lat, lng, label, err := resolveLocation(ctx, c.Location)
 	if err != nil {
 		return err
 	}
@@ -54,5 +54,6 @@ func (c *StoreNearCmd) Run(rt *Runtime) error {
 	if err != nil {
 		return liveErr(err)
 	}
+	rt.Out.Info("nearest stores to %s", label)
 	return rt.Out.Emit(stores)
 }

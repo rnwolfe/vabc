@@ -34,10 +34,12 @@ type Store struct {
 	Phone          string  `json:"phone,omitempty"`
 	Lat            float64 `json:"lat,omitempty"`
 	Lng            float64 `json:"lng,omitempty"`
-	Hours          string  `json:"hours,omitempty"`
-	ShoppingCenter string  `json:"shoppingCenter,omitempty"`
-	URL            string  `json:"url,omitempty"`
-	Distance       float64 `json:"distance,omitempty"`
+	Hours          string   `json:"hours,omitempty"`
+	ShoppingCenter string   `json:"shoppingCenter,omitempty"`
+	URL            string   `json:"url,omitempty"`
+	// Distance in miles from a query point, when relevant. A pointer so a genuine
+	// 0.0 (the nearest store) renders, while "not computed" is omitted (not null=0).
+	Distance *float64 `json:"distance,omitempty"`
 }
 
 // StoreStock is a store plus the on-hand quantity of a specific product.

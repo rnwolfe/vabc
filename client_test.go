@@ -126,7 +126,7 @@ func TestStoresAndStoreNear(t *testing.T) {
 	if len(near) != 1 || near[0].StoreNumber != 219 {
 		t.Fatalf("nearest should be 219, got %+v", near)
 	}
-	if near[0].Distance > 1 {
+	if near[0].Distance == nil || *near[0].Distance > 1 {
 		t.Fatalf("nearest distance should be ~0, got %v", near[0].Distance)
 	}
 }

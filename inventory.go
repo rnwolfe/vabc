@@ -33,6 +33,7 @@ func (r rawStoreInfo) toStoreStock() StoreStock {
 	if r.Address2 != nil {
 		addr2 = *r.Address2
 	}
+	dist := r.Distance
 	return StoreStock{
 		Store: Store{
 			StoreNumber:    r.StoreID,
@@ -48,7 +49,7 @@ func (r rawStoreInfo) toStoreStock() StoreStock {
 			Hours:          r.Hours,
 			ShoppingCenter: r.ShoppingCenter,
 			URL:            r.URL,
-			Distance:       r.Distance,
+			Distance:       &dist,
 		},
 		Quantity: r.Quantity,
 	}

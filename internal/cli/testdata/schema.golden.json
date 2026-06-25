@@ -121,7 +121,7 @@
                 "name": "store"
               },
               {
-                "help": "Resolve the nearest store from a 5-digit ZIP or \"lat,lng\" instead of --store.",
+                "help": "Resolve the nearest store from a ZIP, street address, or \"lat,lng\" instead of --store.",
                 "name": "near"
               }
             ],
@@ -161,7 +161,7 @@
           {
             "args": [
               {
-                "help": "A 5-digit ZIP or \"lat,lng\" to search near.",
+                "help": "A 5-digit ZIP, a street address, or \"lat,lng\" to search near.",
                 "name": "location"
               }
             ],

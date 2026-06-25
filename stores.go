@@ -66,9 +66,10 @@ func (c *httpClient) StoreNear(ctx context.Context, lat, lng float64, limit int)
 		return nil, err
 	}
 	for i := range stores {
-		stores[i].Distance = round1(haversineMiles(lat, lng, stores[i].Lat, stores[i].Lng))
+		d := round1(haversineMiles(lat, lng, stores[i].Lat, stores[i].Lng))
+		stores[i].Distance = &d
 	}
-	sort.Slice(stores, func(i, j int) bool { return stores[i].Distance < stores[j].Distance })
+	sort.Slice(stores, func(i, j int) bool { return derefMiles(stores[i].Distance) < derefMiles(stores[j].Distance) })
 	if limit > 0 && len(stores) > limit {
 		stores = stores[:limit]
 	}
@@ -118,3 +119,10 @@ func haversineMiles(lat1, lon1, lat2, lon2 float64) float64 {
 }
 
 func round1(f float64) float64 { return math.Round(f*10) / 10 }
+
+func derefMiles(p *float64) float64 {
+	if p == nil {
+		return math.MaxFloat64
+	}
+	return *p
+}

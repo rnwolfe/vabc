@@ -21,24 +21,26 @@ limited-availability ("lottery"/allocated) releases. **No authentication is requ
 - Freshness/scope notes are printed to **stderr** (e.g. "scope: catalog snapshot 2026-06-24").
 
 ## Catalog vs live
-- **Product search/lookup** read a *local catalog snapshot* (Virginia ABC has no live search
-  API). The snapshot ships embedded and is refreshed from ABC's quarterly price list. Run
-  `vabc catalog status` to see its date; `vabc catalog refresh --from-xlsx <file>` to update.
+- **Product search/lookup** read a *local catalog snapshot* (~4,900 products; Virginia ABC has
+  no live search API). It ships embedded. `vabc catalog refresh` auto-downloads the current
+  quarterly price list and rebuilds it; `vabc catalog status` shows its date.
 - **Inventory, stores, lottery** are *live* HTTP reads.
+- **Locations** (`--near`, `store near`) accept a 5-digit ZIP (offline centroid), a street
+  address (geocoded), or `lat,lng`. Distances are measured from that point.
 
 ## Commands
 ```
 vabc product search <query> [--type T] [--allocated]   # search catalog snapshot
 vabc product get <productCode>                          # one product (6-digit code, e.g. 010807)
 vabc inventory check <code> --store <n>                 # live availability + nearby stores
-vabc inventory check <code> --near 22182|"38.91,-77.23" # resolve nearest store (ZIP or lat,lng), then check
+vabc inventory check <code> --near 22182|"123 Main St, Vienna VA"|"38.91,-77.23"  # nearest store, then check
 vabc inventory warehouse <code>                         # statewide warehouse stock
 vabc store list                                         # all stores
 vabc store get <storeNumber>                            # one store
-vabc store near 22182|"38.91,-77.23"                    # nearest stores (ZIP or lat,lng)
+vabc store near 22182|"123 Main St, Richmond VA"|"38.91,-77.23"  # nearest stores (ZIP / address / lat,lng)
 vabc lottery check <code>                               # limited-availability events
 vabc catalog status                                     # snapshot date / count / staleness
-vabc catalog refresh --from-xlsx <file>                 # rebuild local snapshot from a price list
+vabc catalog refresh [--from-xlsx <file>]               # auto-download the latest price list (or use a local file)
 vabc auth status                                        # always: no auth required
 vabc doctor [--online]                                  # diagnose setup (--online probes endpoints)
 vabc schema --json                                      # machine-readable command tree + exit codes

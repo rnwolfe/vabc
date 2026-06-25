@@ -26,9 +26,9 @@ go install github.com/rnwolfe/vabc/cmd/vabc@latest
 ```bash
 vabc product search bourbon --allocated      # search the catalog (allocated only)
 vabc product get 010807                       # one product by 6-digit code
-vabc inventory check 010807 --store 219       # live availability + nearby stores
+vabc inventory check 010807 --near 22182      # nearest store to a ZIP, then check stock
 vabc inventory warehouse 010807               # statewide warehouse stock
-vabc store near 38.91,-77.23                  # nearest stores
+vabc store near "1100 Bank St, Richmond VA"   # nearest stores to a ZIP / address / lat,lng
 vabc lottery check 010807                     # limited-availability events
 vabc catalog status                           # snapshot freshness
 
@@ -43,13 +43,14 @@ notes and errors go to stderr.
 ## Catalog data
 
 Virginia ABC has no live product-search API (search sits behind a bot challenge), so `vabc`
-serves product data from a **snapshot** keyed by 6-digit product code:
+serves product data from a **snapshot** (~4,900 products) keyed by 6-digit product code:
 
 - A snapshot ships **embedded in the binary** (works offline).
-- It is refreshed from ABC's **quarterly XLSX price list** and re-released.
-- Run `vabc catalog refresh --from-xlsx <price-list.xlsx>` to update locally between releases.
+- `vabc catalog refresh` **auto-downloads** ABC's current quarterly price list and rebuilds the
+  snapshot. Use `--from-xlsx <file>` to import a price list you already have.
 
-Live inventory, store, and lottery data are fetched fresh on each call.
+Live inventory, store, and lottery data are fetched fresh on each call. Location inputs
+(`--near`, `store near`) accept a ZIP, a street address, or `lat,lng`.
 
 ## Library
 
