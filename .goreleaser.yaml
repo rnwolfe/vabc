@@ -1,0 +1,65 @@
+version: 2
+
+project_name: vabc
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: vabc
+    main: ./cmd/vabc
+    binary: vabc
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X github.com/rnwolfe/vabc/internal/version.version={{.Version}}
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+archives:
+  - id: vabc
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+
+checksum:
+  name_template: "checksums.txt"
+
+sboms:
+  - artifacts: archive
+
+homebrew_casks:
+  - name: vabc
+    repository:
+      owner: rnwolfe
+      name: homebrew-tap
+      token: "{{ .Env.GORELEASER_TOKEN }}"
+    homepage: "https://github.com/rnwolfe/vabc/"
+    description: "Search Virginia ABC products and check store inventory from the command line"
+    url:
+      verified: "github.com/rnwolfe/vabc/"
+    # Unsigned binaries are Gatekeeper-quarantined on macOS; strip the attribute on install.
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system "xattr", "-dr", "com.apple.quarantine", "#{staged_path}/vabc"
+          end
+
+release:
+  prerelease: auto
+
+changelog:
+  use: github
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
