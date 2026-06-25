@@ -10,8 +10,9 @@
 Built for humans *and* agents: structured JSON output, a machine-readable `schema`, an embedded
 `agent` usage doc, stable exit codes, and token-bounded results.
 
-> **Status:** scaffolded. Catalog search and the full agent-CLI contract work today; the live
-> inventory/store/lottery calls are placeholders until the implementation stage (see `spec.md`).
+> **Status:** functional. Catalog search, live inventory/store/lottery, the store locator, the
+> XLSX catalog refresh, and the full agent-CLI contract all work and are validated against the
+> real API. Next up (optional): the published landing page + docs site (see `spec.md`).
 
 ## Install
 

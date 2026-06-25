@@ -43,8 +43,10 @@ go build -o vabc ./cmd/vabc          # build the CLI
   `os.UserCacheDir()/vabc`. Never add evasion (UA spoofing, proxy rotation, CAPTCHA solving).
 
 ## Status
-Scaffold stage complete (contract surface + catalog reads work; live API is a placeholder
-returning `NOT_IMPLEMENTED`). Next: **cli-implement** wires the real HTTP client, ArcGIS store
-locator, throttle state, and the XLSX harvester. See `spec.md`.
+Implemented and verified. The live HTTP client (inventory/stores/lottery), ArcGIS store locator,
+persistent cross-process throttle/circuit-breaker, ZIP/lat-lng resolution, XLSX catalog harvester,
+prompt-injection fencing, and the full agent-CLI contract all work; validated against the real API
+(read-only) and with httptest unit tests. Next (optional): **cli-publish** for the landing page +
+docs site. See `spec.md`.
 
 <!-- DOCS-FRESHNESS: when commands/flags/output fields change, update internal/skill/SKILL.md and the schema snapshot. -->
