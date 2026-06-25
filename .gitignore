@@ -1,0 +1,17 @@
+# Build output
+/vabc
+/vabc-catalog-gen
+/dist/
+*.test
+*.out
+
+# Go
+/vendor/
+
+# Web (cli-publish stage: landing + docs)
+node_modules/
+.astro/
+.vercel/
+
+# Editor / OS
+.DS_Store

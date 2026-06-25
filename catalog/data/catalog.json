@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "snapshotDate": "2026-06-24",
+  "note": "SEED snapshot — a handful of entries so product search/get work offline out of the box. The real ~2,900-product catalog is generated from Virginia ABC's quarterly XLSX price list via `vabc catalog refresh` / the CI catalog-gen job. Only product code 010807 is verified real; rows prefixed SAMPLE are placeholders to be replaced.",
+  "products": [
+    {
+      "productCode": "010807",
+      "name": "Crown Royal Regal Apple",
+      "category": "Whisky",
+      "type": "Canadian Whisky",
+      "allocated": false,
+      "onlineOrderable": true,
+      "new": false
+    },
+    {
+      "productCode": "900001",
+      "name": "SAMPLE Kentucky Straight Bourbon",
+      "category": "Whiskey",
+      "type": "Bourbon",
+      "allocated": true,
+      "onlineOrderable": false,
+      "new": false
+    },
+    {
+      "productCode": "900002",
+      "name": "SAMPLE Single Barrel Rye",
+      "category": "Whiskey",
+      "type": "Rye",
+      "allocated": true,
+      "onlineOrderable": false,
+      "new": true
+    },
+    {
+      "productCode": "900003",
+      "name": "SAMPLE London Dry Gin",
+      "category": "Gin",
+      "type": "Gin",
+      "allocated": false,
+      "onlineOrderable": true,
+      "new": false
+    },
+    {
+      "productCode": "900004",
+      "name": "SAMPLE Anejo Tequila",
+      "category": "Tequila",
+      "type": "Tequila",
+      "allocated": false,
+      "onlineOrderable": true,
+      "new": false
+    }
+  ]
+}
