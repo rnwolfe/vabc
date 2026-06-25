@@ -30,7 +30,7 @@ func setup(t *testing.T) {
 
 func TestProductSearchJSON(t *testing.T) {
 	setup(t)
-	out, _, code := run(t, "product", "search", "crown royal", "--json")
+	out, _, code := run(t, "product", "search", "crown royal", "--offline", "--json")
 	if code != 0 {
 		t.Fatalf("exit = %d, want 0", code)
 	}
@@ -50,7 +50,7 @@ func TestProductSearchJSON(t *testing.T) {
 
 func TestProductSearchEmptyIsArray(t *testing.T) {
 	setup(t)
-	out, _, code := run(t, "product", "search", "zzzznotathing", "--json")
+	out, _, code := run(t, "product", "search", "zzzznotathing", "--offline", "--json")
 	if code != 0 {
 		t.Fatalf("exit = %d, want 0", code)
 	}
@@ -76,7 +76,7 @@ func TestProductGetJSON(t *testing.T) {
 
 func TestProductGetNotFound(t *testing.T) {
 	setup(t)
-	_, errb, code := run(t, "product", "get", "000000", "--json")
+	_, errb, code := run(t, "product", "get", "000000", "--offline", "--json")
 	if code != 5 {
 		t.Fatalf("exit = %d, want 5 (not found)", code)
 	}
@@ -87,7 +87,7 @@ func TestProductGetNotFound(t *testing.T) {
 
 func TestSelectProjection(t *testing.T) {
 	setup(t)
-	out, _, code := run(t, "product", "search", "", "--select", "productCode", "--json")
+	out, _, code := run(t, "product", "search", "", "--offline", "--select", "productCode", "--json")
 	if code != 0 {
 		t.Fatalf("exit = %d, want 0", code)
 	}

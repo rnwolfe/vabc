@@ -25,14 +25,20 @@ tracking allocated/limited drops, but the tool covers the full catalog: spirits,
     `https://services9.arcgis.com/6EuFgO4fLTqfNOhu/arcgis/rest/services/Virginia_ABC_Stores/FeatureServer/0/query?where=1=1&outFields=*&f=json`.
     **394 stores**, one call (`maxRecordCount=2000`). Fields: `VAPID, LandmkName` ("ABC Store 088"),
     `Address, City, State, Zip, Phone, URL, X, Y (lng/lat), LOC, FIPScode, FIPSname, LastCheck`.
-  - **Product search / catalog — NO clean JSON API.** Search is **Coveo-for-Sitecore behind a
-    Cloudflare interactive challenge** (`/coveo/rest/*` all return "Just a moment…"; needs a solved
-    CF clearance cookie + a per-page-minted Coveo token). Product pages are `/products/{cat}/{GUID}`.
-    → Handle catalog as a **cached snapshot keyed by the 6-digit `productCode`**, joined against the
-    inventory API. Snapshot schema (stable since 2016 awunderground dump): `ProductId` (6-digit
-    zero-padded SKU = join key), `ProductName, StatusInd, Proof, Size, RetailPrice, DiscountPrice,
-    HierarchyCategory/Type, UPCs, Allocated (bool — the bourbon-hunter flag), OnlineOrderable (bool),
-    New, Id (GUID), Url`.
+  - **Product search / catalog — LIVE via Coveo (CORRECTED).** The earlier finding that search was
+    Cloudflare-blocked was **wrong**: `POST /coveo/rest/search/v2` is **publicly queryable,
+    anonymous, and not CF-challenged** (verified live 2026-06-25). `GET /coveo/rest/token` mints an
+    anonymous token but isn't even required. It indexes the **full web catalog** — more complete and
+    current than the downloadable price list (e.g. "Planteray O.f.t.d Overproof Rum", sku `953714`,
+    is on the site but absent from the quarterly XLSX). Key Coveo raw fields (special chars encoded:
+    z32x=space, z95x=`_`, z120x=`x`, z122x=`z`): `z95xproductz32xskuz32xids` (= the inventory
+    `productCode`, confirmed: Planteray Original Dark → `042395`), `productz32xlabelz32xname`,
+    `hierarchyz32xcategory/type`, `z95xproductz32xsiz122xes`, `z95xproductz32xpricez32xsort`,
+    `proofmin`, `z95xproductz32xlimitedz32xavailability`, `clickUri`.
+    → **Implemented:** `product search`/`get` query Coveo LIVE by default (full coverage, current).
+    The downloadable **quarterly price-list XLSX** still feeds an **embedded snapshot** (~4,900
+    products) used as the `--offline` path and the automatic fallback when the live catalog is
+    unreachable. (Original snapshot-only plan retained as the offline tier.)
 - **Rate limits / pagination**: No documented rate limit on `/webapi/*`; **no pagination** (one
   product/store per call → per-pair fan-out). **The endpoints are undocumented and CF-exempt only
   because the site's own JS calls them** → treat as a courtesy surface. Because an agent spawns a

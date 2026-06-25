@@ -21,9 +21,12 @@ limited-availability ("lottery"/allocated) releases. **No authentication is requ
 - Freshness/scope notes are printed to **stderr** (e.g. "scope: catalog snapshot 2026-06-24").
 
 ## Catalog vs live
-- **Product search/lookup** read a *local catalog snapshot* (~4,900 products; Virginia ABC has
-  no live search API). It ships embedded. `vabc catalog refresh` auto-downloads the current
-  quarterly price list and rebuilds it; `vabc catalog status` shows its date.
+- **Product search/lookup** query the **live web catalog** (the site's Coveo index) by default —
+  full coverage, current, and including new/online-only SKUs absent from the downloadable price
+  list. Results carry the inventory product code. Pass `--offline` to search the embedded
+  snapshot instead (no network); the snapshot also serves as an automatic fallback when the live
+  catalog is unreachable. `vabc catalog refresh` rebuilds the offline snapshot from the quarterly
+  price list; `vabc catalog status` shows its date.
 - **Inventory, stores, lottery** are *live* HTTP reads.
 - **Locations** (`--near`, `store near`) accept a 5-digit ZIP (offline centroid), a street
   address (geocoded), or `lat,lng`. Distances are measured from that point.

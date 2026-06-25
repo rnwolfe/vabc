@@ -16,8 +16,9 @@ go build -o vabc ./cmd/vabc          # build the CLI
 
 ## Layout (library-first — keep the API importable & dependency-light)
 - **`/` (package `vabc`)** — the public, importable API: `Client` interface (live inventory /
-  stores / lottery), domain types, `NewClient`. **HTTP + JSON deps only.** Do not import
-  `catalog`, `internal/*`, or anything heavy here.
+  stores / lottery / **Coveo product search**), domain types, `NewClient`. **HTTP + JSON deps
+  only.** Do not import `catalog`, `internal/*`, or anything heavy here. (`coveo.go` = live
+  product search; `pricelist.go` = price-list auto-download.)
 - **`catalog/`** — `Catalog` interface + embedded-snapshot provider. Imports `vabc` only.
 - **`internal/harvest/`** — XLSX → catalog generation (gets `excelize` in cli-implement).
   Quarantined so importers of `vabc`/`catalog` never inherit it.

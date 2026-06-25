@@ -42,15 +42,17 @@ notes and errors go to stderr.
 
 ## Catalog data
 
-Virginia ABC has no live product-search API (search sits behind a bot challenge), so `vabc`
-serves product data from a **snapshot** (~4,900 products) keyed by 6-digit product code:
+`product search`/`get` query the **live web catalog** (the site's Coveo index) by default — full
+coverage and current, including new/online-only SKUs. Results carry the inventory product code,
+so you can go straight from a search hit to `inventory check`.
 
-- A snapshot ships **embedded in the binary** (works offline).
-- `vabc catalog refresh` **auto-downloads** ABC's current quarterly price list and rebuilds the
-  snapshot. Use `--from-xlsx <file>` to import a price list you already have.
+For offline use, an embedded **snapshot** (~4,900 products from the quarterly price list) ships in
+the binary and is used automatically when the live catalog is unreachable, or on demand with
+`--offline`. `vabc catalog refresh` rebuilds that snapshot (auto-downloading the latest price
+list, or `--from-xlsx <file>`).
 
-Live inventory, store, and lottery data are fetched fresh on each call. Location inputs
-(`--near`, `store near`) accept a ZIP, a street address, or `lat,lng`.
+Inventory, store, and lottery data are fetched fresh on each call. Location inputs (`--near`,
+`store near`) accept a ZIP, a street address, or `lat,lng`.
 
 ## Library
 

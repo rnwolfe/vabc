@@ -75,21 +75,25 @@
           {
             "args": [
               {
-                "help": "Keyword matched against product name or code (omit to browse).",
+                "help": "Keyword matched against product name (omit to browse).",
                 "name": "query"
               }
             ],
             "flags": [
               {
-                "help": "Filter by product type or category, e.g. bourbon, gin.",
+                "help": "Filter by product category/type, e.g. bourbon, gin.",
                 "name": "type"
               },
               {
                 "help": "Only allocated / limited-availability products.",
                 "name": "allocated"
+              },
+              {
+                "help": "Search the embedded snapshot only (no network).",
+                "name": "offline"
               }
             ],
-            "help": "Search the catalog snapshot by keyword.",
+            "help": "Search products by keyword (live web catalog).",
             "name": "search"
           },
           {
@@ -97,6 +101,12 @@
               {
                 "help": "6-digit product code (e.g. 010807).",
                 "name": "code"
+              }
+            ],
+            "flags": [
+              {
+                "help": "Look up in the embedded snapshot only (no network).",
+                "name": "offline"
               }
             ],
             "help": "Get one product by 6-digit product code.",

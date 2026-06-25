@@ -1,6 +1,7 @@
 package vabc
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -45,6 +46,10 @@ type Client interface {
 	// LimitedAvailability returns the lottery/allocated event hook for a product
 	// (/webapi/limitedavailability/eventLinks).
 	LimitedAvailability(ctx context.Context, productCode string) (LotteryResult, error)
+	// SearchProducts runs a live product search against the site's Coveo index,
+	// which covers the full web catalog (more complete and current than the
+	// downloadable price list). Results carry the inventory product code.
+	SearchProducts(ctx context.Context, query string, limit int) ([]Product, error)
 }
 
 // Option configures the HTTP client.
@@ -156,6 +161,75 @@ func (c *httpClient) getJSON(ctx context.Context, url string, out any) error {
 
 func (c *httpClient) do(ctx context.Context, url string) ([]byte, int, error) {
 	return c.doAccept(ctx, url, "application/json")
+}
+
+// postJSON performs a throttled, retried POST of a JSON body and decodes the JSON
+// response into out, classifying failures like getJSON.
+func (c *httpClient) postJSON(ctx context.Context, url string, reqBody, out any) error {
+	payload, err := json.Marshal(reqBody)
+	if err != nil {
+		return err
+	}
+	var lastErr error
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		if err := c.throttle.acquire(ctx); err != nil {
+			return err
+		}
+		body, status, err := c.doPost(ctx, url, payload)
+		if err != nil {
+			lastErr = retryable(0, "request failed: "+err.Error(), err)
+			if attempt < maxRetries {
+				if werr := sleepCtx(ctx, backoff(attempt)); werr != nil {
+					return werr
+				}
+				continue
+			}
+			return lastErr
+		}
+		switch {
+		case status == http.StatusOK:
+			if err := json.Unmarshal(body, out); err != nil {
+				return schemaDrift("could not decode "+url, err)
+			}
+			return nil
+		case status == http.StatusTooManyRequests || isChallenge(status, body):
+			ra := retryAfterFrom(body)
+			c.throttle.observe(ra)
+			return rateLimited(status, "blocked or rate-limited by the upstream", ra)
+		case status >= 500:
+			lastErr = retryable(status, "upstream error", nil)
+			if attempt < maxRetries {
+				if werr := sleepCtx(ctx, backoff(attempt)); werr != nil {
+					return werr
+				}
+				continue
+			}
+			return lastErr
+		default:
+			return retryable(status, fmt.Sprintf("unexpected status %d", status), nil)
+		}
+	}
+	return lastErr
+}
+
+func (c *httpClient) doPost(ctx context.Context, url string, payload []byte) ([]byte, int, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(payload))
+	if err != nil {
+		return nil, 0, err
+	}
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User-Agent", c.userAgent)
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(io.LimitReader(resp.Body, 32<<20))
+	if err != nil {
+		return nil, resp.StatusCode, err
+	}
+	return body, resp.StatusCode, nil
 }
 
 func (c *httpClient) doAccept(ctx context.Context, url, accept string) ([]byte, int, error) {

@@ -222,3 +222,44 @@ func TestFetchLatestPriceList(t *testing.T) {
 		t.Fatalf("did not return xlsx bytes: %q", string(data))
 	}
 }
+
+func TestSearchProducts(t *testing.T) {
+	coveo := `{"totalCount":2,"results":[
+	  {"clickUri":"https://x/products/rum/planteray-oftd","raw":{
+	    "z95xproductz32xskuz32xids":["953714"],
+	    "productz32xlabelz32xname":"Planteray O.f.t.d Overproof Rum",
+	    "hierarchyz32xcategory":"Rum","hierarchyz32xtype":"[Dark]",
+	    "z95xproductz32xsiz122xes":"1 L","z95xproductz32xpricez32xsort":32.99,
+	    "proofmin":138,"z95xproductz32xlimitedz32xavailability":0,"z95xnewz32xproduct":1}},
+	  {"clickUri":"https://x/page","raw":{"ftitle79429":"Some FAQ page"}}
+	]}`
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost || !strings.Contains(r.URL.Path, "/coveo/rest/search") {
+			http.NotFound(w, r)
+			return
+		}
+		_, _ = w.Write([]byte(coveo))
+	}))
+	defer srv.Close()
+
+	products, err := testClient(t, srv).SearchProducts(context.Background(), "oftd", 10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(products) != 1 { // the non-product (no SKU) result is dropped
+		t.Fatalf("want 1 product, got %d: %+v", len(products), products)
+	}
+	p := products[0]
+	if p.ProductCode != "953714" || !strings.Contains(p.Name, "Overproof") {
+		t.Fatalf("bad mapping: %+v", p)
+	}
+	if p.Category != "Rum" || p.Size != "1 L" {
+		t.Fatalf("category/size mismapped: %+v", p)
+	}
+	if p.RetailPrice == nil || *p.RetailPrice != 32.99 {
+		t.Fatalf("price not mapped: %+v", p.RetailPrice)
+	}
+	if p.Proof == nil || *p.Proof != 138 || !p.New {
+		t.Fatalf("proof/new not mapped: %+v", p)
+	}
+}
