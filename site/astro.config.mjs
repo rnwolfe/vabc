@@ -1,6 +1,7 @@
 // @ts-check
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
+import starlightLlmsTxt from "starlight-llms-txt";
 
 // Canonical site URL. Currently the live Vercel alias; cut over to https://vabc.sh
 // once the domain is bought (update here + redeploy + re-alias + regenerate OG cards).
@@ -15,6 +16,7 @@ export default defineConfig({
       description:
         "Virginia ABC product search and store inventory from your terminal — agent-friendly, read-only.",
       tagline: "Find the bottle. Skip the website.",
+      plugins: [starlightLlmsTxt()],
       logo: { src: "./src/assets/mark.svg", replacesTitle: false },
       customCss: ["./src/styles/tokens.css", "./src/styles/docs.css"],
       social: { github: "https://github.com/rnwolfe/vabc" },

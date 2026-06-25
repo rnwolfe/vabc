@@ -80,6 +80,11 @@ notes and errors go to stderr.
 vabc --json inventory check 010807 --near 22182 | jq '.store.quantity, .nearbyStores[].quantity'
 ```
 
+`vabc` conforms to the [Agent CLI Guidelines](https://aclig.dev/) **v0.4.0** at the **Full** level.
+The conformance block is machine-verifiable from the binary itself — `vabc schema --json` emits
+`{ "spec": "agent-cli-guidelines", "version": "0.4.0", "level": "Full" }` — so an agent can confirm
+the contract version without trusting this badge.
+
 ## How it works
 
 Everything is a live read against Virginia ABC's public, unauthenticated endpoints — product

@@ -215,10 +215,21 @@
         "name": "agent"
       },
       {
+        "flags": [
+          {
+            "help": "Check for a newer release (network, short timeout, fail-silent).",
+            "name": "check"
+          }
+        ],
         "help": "Print the version.",
         "name": "version"
       }
     ]
+  },
+  "conformance": {
+    "level": "Full",
+    "spec": "agent-cli-guidelines",
+    "version": "0.4.0"
   },
   "exit_codes": {
     "auth_required": 4,
