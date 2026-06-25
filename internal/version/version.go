@@ -51,12 +51,16 @@ func repoSlug() string {
 	return ""
 }
 
-// UpgradeHint returns the recommended upgrade command for this tool.
+// UpgradeHint returns the recommended upgrade command for this tool. The main package lives at
+// ./cmd/<tool> (the scaffold layout), so the install path includes /cmd/<tool> — a bare
+// module@latest would fail for tools with no root main.
 func UpgradeHint() string {
-	if slug := repoSlug(); slug != "" {
-		return "go install github.com/" + slug + "/cmd/vabc@latest"
+	slug := repoSlug()
+	if slug == "" {
+		return ""
 	}
-	return ""
+	repo := slug[strings.LastIndex(slug, "/")+1:]
+	return "go install github.com/" + slug + "/cmd/" + repo + "@latest"
 }
 
 // Latest returns the latest released version tag (from GitHub Releases by default).
@@ -79,6 +83,7 @@ func Latest(ctx context.Context) (string, error) {
 		return "", err
 	}
 	req.Header.Set("Accept", "application/vnd.github+json")
+	req.Header.Set("User-Agent", "vabc-version-check") // GitHub's REST API rejects requests with no UA
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return "", err

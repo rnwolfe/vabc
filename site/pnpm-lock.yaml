@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@astrojs/starlight':
-        specifier: ^0.30.0
-        version: 0.30.6(astro@5.18.2(@types/node@24.13.2)(rollup@4.62.2)(typescript@5.9.3))
+        specifier: ^0.31.0
+        version: 0.31.1(astro@5.18.2(@types/node@24.13.2)(rollup@4.62.2)(typescript@5.9.3))
       '@fontsource/bricolage-grotesque':
         specifier: ^5.2.10
         version: 5.2.10
@@ -28,7 +28,7 @@ importers:
         version: 0.33.5
       starlight-llms-txt:
         specifier: ^0.4.0
-        version: 0.4.1(@astrojs/starlight@0.30.6(astro@5.18.2(@types/node@24.13.2)(rollup@4.62.2)(typescript@5.9.3)))(astro@5.18.2(@types/node@24.13.2)(rollup@4.62.2)(typescript@5.9.3))
+        version: 0.4.1(@astrojs/starlight@0.31.1(astro@5.18.2(@types/node@24.13.2)(rollup@4.62.2)(typescript@5.9.3)))(astro@5.18.2(@types/node@24.13.2)(rollup@4.62.2)(typescript@5.9.3))
 
 packages:
 
@@ -54,10 +54,10 @@ packages:
   '@astrojs/sitemap@3.7.3':
     resolution: {integrity: sha512-f8euLVsyeAmAkSm/1M2Kb8sL8byQmfgbvBNaHFItCheTj/IpiJYSEWVcqDHZ/yEHxiS7+w87mQkzwZaPHmk5GA==}
 
-  '@astrojs/starlight@0.30.6':
-    resolution: {integrity: sha512-/AoLXjPPD1MqixkTd2Lp3qahSzfCejePWHZQ3+fDjj1CuXI7Gjrr5bR3zNV0b9tynloPAIBM0HOyBNEGAo9uAQ==}
+  '@astrojs/starlight@0.31.1':
+    resolution: {integrity: sha512-VIVkHugwgtEqJPiRH8+ouP0UqUfdmpBO9C64R+6QaQ2qmADNkI/BA3/YAJHTBZYlMQQGEEuLJwD9qpaUovi52Q==}
     peerDependencies:
-      astro: ^5.0.0
+      astro: ^5.1.5
 
   '@astrojs/telemetry@3.3.0':
     resolution: {integrity: sha512-UFBgfeldP06qu6khs/yY+q1cDAaArM2/7AEIqQ9Cuvf7B1hNLq0xDrZkct+QoIGyjq56y8IaE2I3CTvG99mlhQ==}
@@ -407,17 +407,17 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@expressive-code/core@0.38.3':
-    resolution: {integrity: sha512-s0/OtdRpBONwcn23O8nVwDNQqpBGKscysejkeBkwlIeHRLZWgiTVrusT5Idrdz1d8cW5wRk9iGsAIQmwDPXgJg==}
+  '@expressive-code/core@0.40.2':
+    resolution: {integrity: sha512-gXY3v7jbgz6nWKvRpoDxK4AHUPkZRuJsM79vHX/5uhV9/qX6Qnctp/U/dMHog/LCVXcuOps+5nRmf1uxQVPb3w==}
 
-  '@expressive-code/plugin-frames@0.38.3':
-    resolution: {integrity: sha512-qL2oC6FplmHNQfZ8ZkTR64/wKo9x0c8uP2WDftR/ydwN/yhe1ed7ZWYb8r3dezxsls+tDokCnN4zYR594jbpvg==}
+  '@expressive-code/plugin-frames@0.40.2':
+    resolution: {integrity: sha512-aLw5IlDlZWb10Jo/TTDCVsmJhKfZ7FJI83Zo9VDrV0OBlmHAg7klZqw68VDz7FlftIBVAmMby53/MNXPnMjTSQ==}
 
-  '@expressive-code/plugin-shiki@0.38.3':
-    resolution: {integrity: sha512-kqHnglZeesqG3UKrb6e9Fq5W36AZ05Y9tCREmSN2lw8LVTqENIeCIkLDdWtQ5VoHlKqwUEQFTVlRehdwoY7Gmw==}
+  '@expressive-code/plugin-shiki@0.40.2':
+    resolution: {integrity: sha512-t2HMR5BO6GdDW1c1ISBTk66xO503e/Z8ecZdNcr6E4NpUfvY+MRje+LtrcvbBqMwWBBO8RpVKcam/Uy+1GxwKQ==}
 
-  '@expressive-code/plugin-text-markers@0.38.3':
-    resolution: {integrity: sha512-dPK3+BVGTbTmGQGU3Fkj3jZ3OltWUAlxetMHI6limUGCWBCucZiwoZeFM/WmqQa71GyKRzhBT+iEov6kkz2xVA==}
+  '@expressive-code/plugin-text-markers@0.40.2':
+    resolution: {integrity: sha512-/XoLjD67K9nfM4TgDlXAExzMJp6ewFKxNpfUw4F7q5Ecy+IU3/9zQQG/O70Zy+RxYTwKGw2MA9kd7yelsxnSmw==}
 
   '@fontsource/bricolage-grotesque@5.2.10':
     resolution: {integrity: sha512-V2xS+1P7C8IrSypXLUx/bLtX/LsTlYtV2k2CsU+S/0t8qepZ2hvKSlyJIx7Ub/iY8Bbnj+IjAuUF9nvFz+BbIg==}
@@ -984,8 +984,8 @@ packages:
     resolution: {integrity: sha512-LElXdjswlqjWrPpJFg1Fx4wpkOCxj1TDHlSV4PlaRxHGWko024xICaa97ZkMfs6DRKlCguiAI+rbXv5GWwXIkg==}
     hasBin: true
 
-  astro-expressive-code@0.38.3:
-    resolution: {integrity: sha512-Tvdc7RV0G92BbtyEOsfJtXU35w41CkM94fOAzxbQP67Wj5jArfserJ321FO4XA7WG9QMV0GIBmQq77NBIRDzpQ==}
+  astro-expressive-code@0.40.2:
+    resolution: {integrity: sha512-yJMQId0yXSAbW9I6yqvJ3FcjKzJ8zRL7elbJbllkv1ZJPlsI0NI83Pxn1YL1IapEM347EvOOkSW2GL+2+NO61w==}
     peerDependencies:
       astro: ^4.0.0-beta || ^5.0.0-beta || ^3.3.0
 
@@ -1255,8 +1255,8 @@ packages:
   eventemitter3@5.0.4:
     resolution: {integrity: sha512-mlsTRyGaPBjPedk6Bvw+aqbsXDtoAyAzm5MO7JgU+yVRyMQ5O8bD4Kcci7BS85f93veegeCPkL8R4GLClnjLFw==}
 
-  expressive-code@0.38.3:
-    resolution: {integrity: sha512-COM04AiUotHCKJgWdn7NtW2lqu8OW8owAidMpkXt1qxrZ9Q2iC7+tok/1qIn2ocGnczvr9paIySgGnEwFeEQ8Q==}
+  expressive-code@0.40.2:
+    resolution: {integrity: sha512-1zIda2rB0qiDZACawzw2rbdBQiWHBT56uBctS+ezFe5XMAaFaHLnnSYND/Kd+dVzO9HfCXRDpzH3d+3fvOWRcw==}
 
   extend@3.0.2:
     resolution: {integrity: sha512-fjquC59cD7CyW6urNXK0FBufkZcoiGG80wTuPujX590cB5Ttln20E2UB4S/WARVqhXffZl2LNgS+gQdPIIim/g==}
@@ -1778,8 +1778,8 @@ packages:
   regex@6.1.0:
     resolution: {integrity: sha512-6VwtthbV4o/7+OaAF9I5L5V3llLEsoPyq9P1JVXkedTP33c7MfCG0/5NOPcSJn0TzXcG9YUrR0gQSWioew3LDg==}
 
-  rehype-expressive-code@0.38.3:
-    resolution: {integrity: sha512-RYSSDkMBikoTbycZPkcWp6ELneANT4eTpND1DSRJ6nI2eVFUwTBDCvE2vO6jOOTaavwnPiydi4i/87NRyjpdOA==}
+  rehype-expressive-code@0.40.2:
+    resolution: {integrity: sha512-+kn+AMGCrGzvtH8Q5lC6Y5lnmTV/r33fdmi5QU/IH1KPHKobKr5UnLwJuqHv5jBTSN/0v2wLDS7RTM73FVzqmQ==}
 
   rehype-format@5.0.1:
     resolution: {integrity: sha512-zvmVru9uB0josBVpr946OR8ui7nJEdzZobwLOOqHb/OOD88W0Vk2SqLwoVOj0fM6IPCCO6TaV9CvQvJMWwukFQ==}
@@ -2268,7 +2268,7 @@ snapshots:
       stream-replace-string: 2.0.0
       zod: 4.4.3
 
-  '@astrojs/starlight@0.30.6(astro@5.18.2(@types/node@24.13.2)(rollup@4.62.2)(typescript@5.9.3))':
+  '@astrojs/starlight@0.31.1(astro@5.18.2(@types/node@24.13.2)(rollup@4.62.2)(typescript@5.9.3))':
     dependencies:
       '@astrojs/mdx': 4.3.14(astro@5.18.2(@types/node@24.13.2)(rollup@4.62.2)(typescript@5.9.3))
       '@astrojs/sitemap': 3.7.3
@@ -2277,7 +2277,7 @@ snapshots:
       '@types/js-yaml': 4.0.9
       '@types/mdast': 4.0.4
       astro: 5.18.2(@types/node@24.13.2)(rollup@4.62.2)(typescript@5.9.3)
-      astro-expressive-code: 0.38.3(astro@5.18.2(@types/node@24.13.2)(rollup@4.62.2)(typescript@5.9.3))
+      astro-expressive-code: 0.40.2(astro@5.18.2(@types/node@24.13.2)(rollup@4.62.2)(typescript@5.9.3))
       bcp-47: 2.1.0
       hast-util-from-html: 2.0.3
       hast-util-select: 6.0.4
@@ -2492,7 +2492,7 @@ snapshots:
   '@esbuild/win32-x64@0.27.7':
     optional: true
 
-  '@expressive-code/core@0.38.3':
+  '@expressive-code/core@0.40.2':
     dependencies:
       '@ctrl/tinycolor': 4.2.0
       hast-util-select: 6.0.4
@@ -2504,18 +2504,18 @@ snapshots:
       unist-util-visit: 5.1.0
       unist-util-visit-parents: 6.0.2
 
-  '@expressive-code/plugin-frames@0.38.3':
+  '@expressive-code/plugin-frames@0.40.2':
     dependencies:
-      '@expressive-code/core': 0.38.3
+      '@expressive-code/core': 0.40.2
 
-  '@expressive-code/plugin-shiki@0.38.3':
+  '@expressive-code/plugin-shiki@0.40.2':
     dependencies:
-      '@expressive-code/core': 0.38.3
+      '@expressive-code/core': 0.40.2
       shiki: 1.29.2
 
-  '@expressive-code/plugin-text-markers@0.38.3':
+  '@expressive-code/plugin-text-markers@0.40.2':
     dependencies:
-      '@expressive-code/core': 0.38.3
+      '@expressive-code/core': 0.40.2
 
   '@fontsource/bricolage-grotesque@5.2.10': {}
 
@@ -2980,10 +2980,10 @@ snapshots:
 
   astring@1.9.0: {}
 
-  astro-expressive-code@0.38.3(astro@5.18.2(@types/node@24.13.2)(rollup@4.62.2)(typescript@5.9.3)):
+  astro-expressive-code@0.40.2(astro@5.18.2(@types/node@24.13.2)(rollup@4.62.2)(typescript@5.9.3)):
     dependencies:
       astro: 5.18.2(@types/node@24.13.2)(rollup@4.62.2)(typescript@5.9.3)
-      rehype-expressive-code: 0.38.3
+      rehype-expressive-code: 0.40.2
 
   astro@5.18.2(@types/node@24.13.2)(rollup@4.62.2)(typescript@5.9.3):
     dependencies:
@@ -3377,12 +3377,12 @@ snapshots:
 
   eventemitter3@5.0.4: {}
 
-  expressive-code@0.38.3:
+  expressive-code@0.40.2:
     dependencies:
-      '@expressive-code/core': 0.38.3
-      '@expressive-code/plugin-frames': 0.38.3
-      '@expressive-code/plugin-shiki': 0.38.3
-      '@expressive-code/plugin-text-markers': 0.38.3
+      '@expressive-code/core': 0.40.2
+      '@expressive-code/plugin-frames': 0.40.2
+      '@expressive-code/plugin-shiki': 0.40.2
+      '@expressive-code/plugin-text-markers': 0.40.2
 
   extend@3.0.2: {}
 
@@ -4341,9 +4341,9 @@ snapshots:
     dependencies:
       regex-utilities: 2.3.0
 
-  rehype-expressive-code@0.38.3:
+  rehype-expressive-code@0.40.2:
     dependencies:
-      expressive-code: 0.38.3
+      expressive-code: 0.40.2
 
   rehype-format@5.0.1:
     dependencies:
@@ -4614,10 +4614,10 @@ snapshots:
 
   space-separated-tokens@2.0.2: {}
 
-  starlight-llms-txt@0.4.1(@astrojs/starlight@0.30.6(astro@5.18.2(@types/node@24.13.2)(rollup@4.62.2)(typescript@5.9.3)))(astro@5.18.2(@types/node@24.13.2)(rollup@4.62.2)(typescript@5.9.3)):
+  starlight-llms-txt@0.4.1(@astrojs/starlight@0.31.1(astro@5.18.2(@types/node@24.13.2)(rollup@4.62.2)(typescript@5.9.3)))(astro@5.18.2(@types/node@24.13.2)(rollup@4.62.2)(typescript@5.9.3)):
     dependencies:
       '@astrojs/mdx': 4.3.14(astro@5.18.2(@types/node@24.13.2)(rollup@4.62.2)(typescript@5.9.3))
-      '@astrojs/starlight': 0.30.6(astro@5.18.2(@types/node@24.13.2)(rollup@4.62.2)(typescript@5.9.3))
+      '@astrojs/starlight': 0.31.1(astro@5.18.2(@types/node@24.13.2)(rollup@4.62.2)(typescript@5.9.3))
       '@types/hast': 3.0.4
       '@types/micromatch': 4.0.10
       astro: 5.18.2(@types/node@24.13.2)(rollup@4.62.2)(typescript@5.9.3)

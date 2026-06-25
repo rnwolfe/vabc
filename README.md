@@ -81,9 +81,22 @@ vabc --json inventory check 010807 --near 22182 | jq '.store.quantity, .nearbySt
 ```
 
 `vabc` conforms to the [Agent CLI Guidelines](https://aclig.dev/) **v0.4.0** at the **Full** level.
-The conformance block is machine-verifiable from the binary itself — `vabc schema --json` emits
-`{ "spec": "agent-cli-guidelines", "version": "0.4.0", "level": "Full" }` — so an agent can confirm
-the contract version without trusting this badge.
+The conformance block is machine-verifiable from the binary itself — `vabc schema --json` emits a
+top-level `conformance` key — so an agent can confirm the contract version without trusting this badge:
+
+```json
+{
+  "conformance": {
+    "spec": "agent-cli-guidelines",
+    "version": "0.4.0",
+    "level": "Full"
+  }
+}
+```
+
+```bash
+vabc schema --json | jq '.conformance'
+```
 
 ## How it works
 
