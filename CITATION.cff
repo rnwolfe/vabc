@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+title: vabc
+message: "If you use this software, please cite it using these metadata."
+type: software
+authors:
+  - given-names: Ryan
+    family-names: Wolfe
+repository-code: "https://github.com/rnwolfe/vabc"
+url: "https://github.com/rnwolfe/vabc"
+abstract: >-
+  An agent-friendly, read-only command-line tool and Go library for Virginia ABC:
+  live product search, per-store and warehouse inventory, the store locator, and
+  limited-availability ("lottery") releases. No authentication required.
+keywords:
+  - cli
+  - ai-agents
+  - llm-tools
+  - virginia-abc
+  - golang
+license: MIT
+version: 0.1.0
