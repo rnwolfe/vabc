@@ -95,6 +95,44 @@ const nearby = [
       </div>
     </header>
 
+    <!-- INSTALL -->
+    <section class="band" id="install">
+      <div class="wrap">
+        <span class="eyebrow reveal">Install</span>
+        <h2 class="sec reveal">One line and you're hunting.</h2>
+        <p class="sec-sub reveal">A single static binary, no runtime deps, no login. Pick your poison.</p>
+        <div class="install-tabs reveal">
+          <div class="tabs" role="tablist" aria-label="Install method">
+            <button class="tab is-active" role="tab" aria-selected="true" data-tab="curl">curl</button>
+            <button class="tab" role="tab" aria-selected="false" data-tab="brew">Homebrew</button>
+            <button class="tab" role="tab" aria-selected="false" data-tab="go">Go</button>
+            <button class="tab" role="tab" aria-selected="false" data-tab="bin">Binary</button>
+          </div>
+          <div class="panel is-active" data-panel="curl">
+            <span class="prompt">$</span>
+            <code>curl -fsSL https://vabc-cli.vercel.app/install.sh | sh</code>
+            <button class="cp" type="button" aria-label="Copy">copy</button>
+          </div>
+          <div class="panel" data-panel="brew">
+            <span class="prompt">$</span>
+            <code>brew install rnwolfe/tap/vabc</code>
+            <button class="cp" type="button" aria-label="Copy">copy</button>
+          </div>
+          <div class="panel" data-panel="go">
+            <span class="prompt">$</span>
+            <code>go install github.com/rnwolfe/vabc/cmd/vabc@latest</code>
+            <button class="cp" type="button" aria-label="Copy">copy</button>
+          </div>
+          <div class="panel" data-panel="bin">
+            <span class="prompt">↓</span>
+            <code>Prebuilt, checksummed binaries for macOS / Linux / Windows</code>
+            <a class="cp" href="https://github.com/rnwolfe/vabc/releases/latest">releases ↗</a>
+          </div>
+        </div>
+        <p class="install-foot reveal">The <code>curl</code> script verifies the SHA-256 before installing. Then run <code>vabc doctor</code>.</p>
+      </div>
+    </section>
+
     <!-- COMPARISON -->
     <section class="band">
       <div class="wrap">
@@ -233,6 +271,36 @@ vabc schema --json</pre>
         });
       }
       wire("copy", "cmd"); wire("copy2", "cmd2");
+
+      // Install tabs
+      const tabsRoot = document.querySelector(".install-tabs");
+      if (tabsRoot) {
+        tabsRoot.querySelectorAll(".tab").forEach((tab) => {
+          tab.addEventListener("click", () => {
+            const name = tab.dataset.tab;
+            tabsRoot.querySelectorAll(".tab").forEach((t) => {
+              const on = t === tab;
+              t.classList.toggle("is-active", on);
+              t.setAttribute("aria-selected", on ? "true" : "false");
+            });
+            tabsRoot.querySelectorAll(".panel").forEach((p) =>
+              p.classList.toggle("is-active", p.dataset.panel === name),
+            );
+          });
+        });
+        // Copy buttons inside panels
+        tabsRoot.querySelectorAll("button.cp").forEach((b) => {
+          b.addEventListener("click", async () => {
+            const code = b.parentElement.querySelector("code");
+            if (!code) return;
+            try {
+              await navigator.clipboard.writeText(code.textContent.trim());
+              const t = b.textContent; b.textContent = "copied!";
+              setTimeout(() => (b.textContent = t), 1400);
+            } catch {}
+          });
+        });
+      }
     </script>
   </body>
 </html>

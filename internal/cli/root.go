@@ -99,7 +99,7 @@ func Run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 			"  vabc product search bourbon --allocated\n"+
 			"  vabc inventory check 010807 --near 22182\n"+
 			"  vabc --json store near 22182 --limit 3 | jq '.[].storeNumber'\n"+
-			"  vabc catalog refresh --from-xlsx ./q3-2026-price-list.xlsx\n\n"+
+			"  vabc lottery check 953714\n\n"+
 			"Read-only; no authentication required. See `vabc agent` for the full agent guide."),
 		kong.Writers(stdout, stderr),
 		kong.Exit(func(int) { helpShown = true }), // --help/--version: we control exit
