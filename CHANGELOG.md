@@ -6,6 +6,16 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-06-25
+
+### Added
+- **Homebrew install** — `brew install rnwolfe/tap/vabc` (cask published to the tap).
+- Comprehensive documentation site (https://vabc-cli.vercel.app/docs) and a tabbed install
+  widget on the landing page.
+
+### Fixed
+- The `vabc --help` examples referenced the removed `catalog` command; replaced with a valid one.
+
 ## [0.1.0] - 2026-06-25
 
 Initial release.
@@ -25,5 +35,6 @@ Initial release.
 - **Backend etiquette** — a persistent, cross-process throttle/circuit-breaker; no evasion.
 - Read-only by design; no authentication required.
 
-[Unreleased]: https://github.com/rnwolfe/vabc/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/rnwolfe/vabc/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/rnwolfe/vabc/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/rnwolfe/vabc/releases/tag/v0.1.0
